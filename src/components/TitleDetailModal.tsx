@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Play, Plus, Check, ChevronDown, Volume2, VolumeX, Sparkles, Star, Film, Clock } from 'lucide-react';
+import { X, Play, Plus, Check, ChevronDown, Volume2, VolumeX, Sparkles, Star, Clock } from 'lucide-react';
 import { useWatch } from '@/context/WatchContext';
 
 export default function TitleDetailModal() {
@@ -68,13 +68,13 @@ export default function TitleDetailModal() {
   ).slice(0, 3);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
       {/* Modal Dialog Card */}
-      <div className="relative w-full max-w-4xl bg-zinc-950/95 border border-white/10 rounded-2xl overflow-hidden shadow-2xl my-auto animate-in zoom-in-95 duration-200 backdrop-blur-xl">
+      <div className="relative w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl my-auto animate-in zoom-in-95 duration-200 backdrop-blur-xl">
         {/* Close Button */}
         <button
           onClick={() => setActiveModalTitle(null)}
-          className="absolute top-4 right-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-zinc-300 hover:text-white border border-white/10 transition-all hover:scale-105 active:scale-95 shadow-xl backdrop-blur-md"
+          className="absolute top-4 right-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-xl backdrop-blur-md"
           title="Close (Esc)"
         >
           <X className="w-5 h-5" />
@@ -105,16 +105,16 @@ export default function TitleDetailModal() {
             />
           )}
 
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent z-10 pointer-events-none" />
 
           {/* Sound Toggle */}
           {clipSource && (
             <button
               onClick={toggleSound}
-              className="absolute top-4 left-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white border border-white/15 transition-all backdrop-blur-md hover:scale-105 shadow-xl"
+              className="absolute top-4 left-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white border border-zinc-800 transition-all backdrop-blur-md hover:scale-105 shadow-xl"
               title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
             >
-              {isMuted ? <VolumeX className="w-4 h-4 text-zinc-400" /> : <Volume2 className="w-4 h-4 text-red-500" />}
+              {isMuted ? <VolumeX className="w-4 h-4 text-zinc-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
             </button>
           )}
 
@@ -128,7 +128,7 @@ export default function TitleDetailModal() {
                     : `/watch?titleId=${activeModalTitle.id}`
                 }
                 onClick={() => setActiveModalTitle(null)}
-                className="bg-white hover:bg-zinc-200 text-black px-6 md:px-7 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl"
+                className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 md:px-7 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-emerald-500/20"
               >
                 <Play className="w-5 h-5 fill-current" />
                 <span>{activeModalTitle.type === 'series' || activeModalTitle.type === 'anime' ? 'Play S1:E1' : 'Play Movie'}</span>
@@ -136,7 +136,7 @@ export default function TitleDetailModal() {
 
               <button
                 onClick={() => toggleWatchlist(activeModalTitle.id)}
-                className="p-2.5 rounded-xl glass-button text-white transition-all hover:scale-105 active:scale-95"
+                className="p-2.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-white border border-zinc-800 transition-all hover:scale-105 active:scale-95"
                 title={inList ? 'Remove from My List' : 'Add to My List'}
               >
                 {inList ? <Check className="w-5 h-5 text-emerald-400" /> : <Plus className="w-5 h-5" />}
@@ -149,11 +149,11 @@ export default function TitleDetailModal() {
                 setActiveModalTitle(null);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-4 py-2 rounded-xl glass-button text-zinc-200 hover:text-white text-xs font-semibold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg"
+              className="px-4 py-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-semibold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-lg"
               title="Feature on Main Billboard Display"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Feature on Hero Billboard</span>
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Feature on Hero</span>
             </button>
           </div>
         </div>
@@ -169,10 +169,10 @@ export default function TitleDetailModal() {
                   {activeModalTitle.matchScore}% Match
                 </span>
                 <span className="text-zinc-400 text-xs font-medium">{activeModalTitle.releaseYear}</span>
-                <span className="text-xs px-2 py-0.5 border border-zinc-700/80 rounded font-semibold text-zinc-300">
+                <span className="text-xs px-2 py-0.5 border border-zinc-800 rounded font-semibold text-zinc-300">
                   {activeModalTitle.rating}
                 </span>
-                <span className="text-xs px-2 py-0.5 border border-zinc-700/80 rounded font-semibold text-zinc-300">
+                <span className="text-xs px-2 py-0.5 border border-zinc-800 rounded font-semibold text-zinc-300">
                   {activeModalTitle.qualityBadge || '4K Ultra HD'}
                 </span>
                 {activeModalTitle.duration && (
@@ -187,29 +187,29 @@ export default function TitleDetailModal() {
               <p className="text-zinc-300 text-sm leading-relaxed">{activeModalTitle.synopsis}</p>
             </div>
 
-            <div className="space-y-2.5 text-xs text-zinc-400 border-l border-zinc-800/80 pl-5">
+            <div className="space-y-2.5 text-xs text-zinc-400 border-l border-zinc-800 pl-5">
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Director</span>
-                <span className="text-zinc-200">{activeModalTitle.director || 'StreamHub Studio'}</span>
+                <span className="text-zinc-300">{activeModalTitle.director || 'StreamHub Studio'}</span>
               </div>
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Cast</span>
-                <span className="text-zinc-200">{activeModalTitle.cast?.length ? activeModalTitle.cast.join(', ') : 'Original Cast'}</span>
+                <span className="text-zinc-300">{activeModalTitle.cast?.length ? activeModalTitle.cast.join(', ') : 'Original Cast'}</span>
               </div>
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Genres</span>
-                <span className="text-zinc-200">{activeModalTitle.genres?.join(', ')}</span>
+                <span className="text-zinc-300">{activeModalTitle.genres?.join(', ')}</span>
               </div>
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Format</span>
-                <span className="text-zinc-200 uppercase font-bold text-red-400">{activeModalTitle.type}</span>
+                <span className="text-emerald-400 uppercase font-bold">{activeModalTitle.type}</span>
               </div>
             </div>
           </div>
 
           {/* Episodes List (For Series / Anime) */}
           {(activeModalTitle.type === 'series' || activeModalTitle.type === 'anime') && activeModalTitle.seasons && (
-            <div className="border-t border-zinc-800/80 pt-6">
+            <div className="border-t border-zinc-800 pt-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <span>Episodes & Playlists</span>
@@ -223,7 +223,7 @@ export default function TitleDetailModal() {
                     <select
                       value={selectedSeason}
                       onChange={(e) => setSelectedSeason(Number(e.target.value))}
-                      className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer pr-8 appearance-none"
+                      className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none cursor-pointer pr-8 appearance-none"
                     >
                       {activeModalTitle.seasons.map((s) => (
                         <option key={s.seasonNumber} value={s.seasonNumber}>
@@ -242,9 +242,9 @@ export default function TitleDetailModal() {
                     key={ep.id}
                     href={`/watch?titleId=${activeModalTitle.id}&episodeId=${ep.id}`}
                     onClick={() => setActiveModalTitle(null)}
-                    className="flex items-center gap-4 p-3.5 rounded-xl bg-zinc-900/40 hover:bg-zinc-800/70 border border-zinc-800/80 hover:border-zinc-700 transition-all group/ep cursor-pointer shadow-sm"
+                    className="flex items-center gap-4 p-3.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 hover:border-emerald-500/30 transition-all group/ep cursor-pointer shadow-sm"
                   >
-                    <span className="text-base font-bold text-zinc-500 group-hover/ep:text-white w-6 text-center">
+                    <span className="text-base font-bold text-zinc-500 group-hover/ep:text-emerald-400 w-6 text-center">
                       {ep.episodeNumber}
                     </span>
 
@@ -252,13 +252,13 @@ export default function TitleDetailModal() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={ep.thumbnailUrl} alt={ep.title} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 group-hover/ep:bg-black/10 flex items-center justify-center transition-colors">
-                        <Play className="w-6 h-6 text-white fill-current opacity-80 group-hover/ep:opacity-100 group-hover/ep:scale-110 transition-transform" />
+                        <Play className="w-6 h-6 text-white fill-current opacity-80 group-hover/ep:text-emerald-400 group-hover/ep:opacity-100 group-hover/ep:scale-110 transition-transform" />
                       </div>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className="text-sm font-bold text-white truncate group-hover/ep:text-red-400 transition-colors">
+                        <h4 className="text-sm font-bold text-white truncate group-hover/ep:text-emerald-400 transition-colors">
                           {ep.title}
                         </h4>
                         <span className="text-xs text-zinc-400 font-mono ml-2">
@@ -275,14 +275,14 @@ export default function TitleDetailModal() {
 
           {/* More Like This Recommendations */}
           {similarTitles.length > 0 && (
-            <div className="border-t border-zinc-800/80 pt-6">
+            <div className="border-t border-zinc-800 pt-6">
               <h3 className="text-base font-bold text-white mb-4">More Like This</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {similarTitles.map((item) => (
                   <div
                     key={item.id}
                     onClick={() => setActiveModalTitle(item)}
-                    className="bg-zinc-900/60 rounded-xl overflow-hidden border border-zinc-800 hover:border-zinc-600 cursor-pointer transition-all hover:scale-105 shadow-md group"
+                    className="bg-zinc-900/60 rounded-xl overflow-hidden border border-zinc-800 hover:border-emerald-500/40 cursor-pointer transition-all hover:scale-105 shadow-md group"
                   >
                     <div className="aspect-video w-full bg-zinc-800 relative overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -296,7 +296,7 @@ export default function TitleDetailModal() {
                       </span>
                     </div>
                     <div className="p-3">
-                      <h4 className="text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">{item.title}</h4>
+                      <h4 className="text-xs font-bold text-white truncate group-hover:text-emerald-400 transition-colors">{item.title}</h4>
                       <p className="text-[11px] text-zinc-400 line-clamp-2 mt-1">{item.synopsis}</p>
                     </div>
                   </div>

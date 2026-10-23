@@ -7,7 +7,7 @@ import ContentRow from '@/components/ContentRow';
 import ContentCard from '@/components/ContentCard';
 import TitleDetailModal from '@/components/TitleDetailModal';
 import { useWatch } from '@/context/WatchContext';
-import { Search, Clapperboard, Sparkles, Tv, Film, ListPlus, Flame, Layers } from 'lucide-react';
+import { Search, Clapperboard, Sparkles, Tv, Film, ListPlus, Layers } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -45,12 +45,12 @@ export default function Home() {
     : [];
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-white font-sans overflow-x-hidden selection:bg-red-600 selection:text-white">
+    <div className="relative min-h-screen bg-zinc-950 text-white font-sans overflow-x-hidden selection:bg-emerald-500 selection:text-black">
       <Navbar />
 
       {loadingTitles && titles.length === 0 ? (
         <div className="w-screen h-screen flex flex-col items-center justify-center">
-          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-xs text-zinc-400 font-mono tracking-wider">Streaming catalog loading...</p>
         </div>
       ) : titles.length === 0 ? (
@@ -64,18 +64,18 @@ export default function Home() {
           </p>
           <Link
             href="/admin"
-            className="bg-red-600 hover:bg-red-500 text-white font-bold px-7 py-3 rounded-xl text-sm shadow-xl transition-all hover:scale-105 active:scale-95"
+            className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-7 py-3 rounded-xl text-sm shadow-xl shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95"
           >
             Open Admin Control Center
           </Link>
         </div>
       ) : searchQuery.trim() ? (
         <main className="pt-24 px-4 md:px-12 min-h-[85vh]">
-          <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800/80">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
             <div className="flex items-center gap-3">
-              <Search className="w-5 h-5 text-red-500" />
+              <Search className="w-5 h-5 text-emerald-400" />
               <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-                Search Results for &quot;<span className="text-red-400">{searchQuery}</span>&quot;
+                Search Results for &quot;<span className="text-emerald-400">{searchQuery}</span>&quot;
               </h1>
               <span className="text-xs text-zinc-500 font-medium font-mono">({searchResults.length} found)</span>
             </div>
@@ -113,8 +113,8 @@ export default function Home() {
               onClick={() => setActiveFilter('all')}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md shadow-md ${
                 activeFilter === 'all'
-                  ? 'bg-white text-black scale-105'
-                  : 'bg-zinc-950/70 text-zinc-300 hover:text-white border border-white/10 hover:bg-zinc-900'
+                  ? 'bg-emerald-500 text-black scale-105 shadow-emerald-500/20'
+                  : 'bg-zinc-950/80 text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900'
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -125,8 +125,8 @@ export default function Home() {
               onClick={() => setActiveFilter('anime')}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md shadow-md ${
                 activeFilter === 'anime'
-                  ? 'bg-rose-600 text-white scale-105 shadow-rose-600/30'
-                  : 'bg-zinc-950/70 text-zinc-300 hover:text-white border border-white/10 hover:bg-zinc-900'
+                  ? 'bg-emerald-500 text-black scale-105 shadow-emerald-500/20'
+                  : 'bg-zinc-950/80 text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900'
               }`}
             >
               <Tv className="w-3.5 h-3.5" />
@@ -138,8 +138,8 @@ export default function Home() {
               onClick={() => setActiveFilter('movies')}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md shadow-md ${
                 activeFilter === 'movies'
-                  ? 'bg-cyan-600 text-white scale-105 shadow-cyan-600/30'
-                  : 'bg-zinc-950/70 text-zinc-300 hover:text-white border border-white/10 hover:bg-zinc-900'
+                  ? 'bg-emerald-500 text-black scale-105 shadow-emerald-500/20'
+                  : 'bg-zinc-950/80 text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900'
               }`}
             >
               <Film className="w-3.5 h-3.5" />
@@ -151,8 +151,8 @@ export default function Home() {
               onClick={() => setActiveFilter('watchlist')}
               className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md shadow-md ${
                 activeFilter === 'watchlist'
-                  ? 'bg-emerald-600 text-white scale-105 shadow-emerald-600/30'
-                  : 'bg-zinc-950/70 text-zinc-300 hover:text-white border border-white/10 hover:bg-zinc-900'
+                  ? 'bg-emerald-500 text-black scale-105 shadow-emerald-500/20'
+                  : 'bg-zinc-950/80 text-zinc-400 hover:text-white border border-zinc-800 hover:bg-zinc-900'
               }`}
             >
               <ListPlus className="w-3.5 h-3.5" />
@@ -230,15 +230,15 @@ export default function Home() {
       {/* Title Details Modal */}
       <TitleDetailModal />
 
-      {/* Modern Industry Standard Streaming Footer */}
-      <footer className="border-t border-white/[0.08] mt-24 py-12 px-4 md:px-12 bg-zinc-950 text-zinc-500 text-xs">
+      {/* Clean Black & Grey Footer with Subtle Green Accents */}
+      <footer className="border-t border-zinc-900 mt-24 py-12 px-4 md:px-12 bg-zinc-950 text-zinc-500 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center font-black text-white text-xs">
+            <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center font-black text-black text-xs">
               S
             </div>
-            <span className="text-base font-black tracking-tight text-white">STREAMHUB</span>
-            <span className="text-[11px] text-zinc-500">Ultra-Low Latency Streaming</span>
+            <span className="text-base font-black tracking-tight text-white">STREAM<span className="text-emerald-400">HUB</span></span>
+            <span className="text-[11px] text-zinc-500 font-mono">v1.0</span>
           </div>
 
           <div className="flex items-center gap-6 text-[11px] text-zinc-400 flex-wrap justify-center">
@@ -246,13 +246,13 @@ export default function Home() {
             <span className="hover:text-zinc-200 transition-colors">Dolby Atmos</span>
             <span className="hover:text-zinc-200 transition-colors">HLS Adaptive Streaming</span>
             <span className="hover:text-zinc-200 transition-colors">Local MP4 Zero-Transcode</span>
-            <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold transition-colors">
+            <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
               Admin Portal
             </Link>
           </div>
 
           <div className="flex items-center gap-1.5 text-zinc-600 text-[11px]">
-            <Sparkles className="w-3.5 h-3.5 text-red-500" />
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             <span>SQLite Powered RBAC Architecture</span>
           </div>
         </div>

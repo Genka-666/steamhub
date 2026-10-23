@@ -489,12 +489,12 @@ export default function VideoPlayer({
       {/* Error Card Overlay */}
       {hasError && (
         <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-6 text-center z-40">
-          <AlertTriangle className="w-12 h-12 text-red-500 mb-3" />
+          <AlertTriangle className="w-12 h-12 text-emerald-400 mb-3" />
           <h3 className="text-xl font-bold text-white mb-1">Playback Error</h3>
-          <p className="text-xs text-gray-400 max-w-sm mb-6">{errorMessage}</p>
+          <p className="text-xs text-zinc-400 max-w-sm mb-6">{errorMessage}</p>
           <button
             onClick={onBack}
-            className="bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-colors"
+            className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-6 py-2.5 rounded-xl text-xs transition-colors"
           >
             Return to Browse
           </button>
@@ -504,7 +504,7 @@ export default function VideoPlayer({
       {/* Buffering Spinner */}
       {isBuffering && !hasError && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin shadow-lg" />
+          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin shadow-lg" />
         </div>
       )}
 
@@ -512,7 +512,7 @@ export default function VideoPlayer({
       {!isPlaying && !isBuffering && !hasError && (
         <button
           onClick={togglePlay}
-          className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 z-20 group/playbtn"
+          className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center shadow-2xl shadow-emerald-500/30 transition-all duration-300 hover:scale-110 z-20 group/playbtn"
           title="Play Video"
         >
           <Play className="w-9 h-9 fill-current ml-1 transition-transform group-hover/playbtn:scale-110" />
@@ -590,7 +590,7 @@ export default function VideoPlayer({
 
           {/* Played Bar */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-red-600 rounded-full transition-all group-hover/bar:h-2 pointer-events-none"
+            className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-emerald-500 rounded-full transition-all group-hover/bar:h-2 pointer-events-none"
             style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
           />
 
@@ -651,7 +651,7 @@ export default function VideoPlayer({
                 step={0.05}
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-0 group-hover/vol:w-20 transition-all duration-200 accent-red-600 h-1 rounded cursor-pointer"
+                className="w-0 group-hover/vol:w-20 transition-all duration-200 accent-emerald-500 h-1 rounded cursor-pointer"
               />
             </div>
 
@@ -687,7 +687,7 @@ export default function VideoPlayer({
                         className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/10 rounded text-gray-200"
                       >
                         <span>Quality</span>
-                        <span className="text-xs text-red-400 flex items-center gap-1 font-semibold">
+                        <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
                           {activeQualityLabel}
                           <ChevronRight className="w-3.5 h-3.5" />
                         </span>
@@ -698,7 +698,7 @@ export default function VideoPlayer({
                         className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/10 rounded text-gray-200"
                       >
                         <span>Speed</span>
-                        <span className="text-xs text-red-400 flex items-center gap-1 font-semibold">
+                        <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
                           {playbackSpeed === 1 ? 'Normal' : `${playbackSpeed}x`}
                           <ChevronRight className="w-3.5 h-3.5" />
                         </span>
@@ -719,7 +719,7 @@ export default function VideoPlayer({
                         className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/10 rounded text-gray-200"
                       >
                         <span>Auto (Recommended)</span>
-                        {currentQuality === -1 && <Check className="w-4 h-4 text-red-500" />}
+                        {currentQuality === -1 && <Check className="w-4 h-4 text-emerald-400" />}
                       </button>
                       {qualityLevels.map((lvl) => (
                         <button
@@ -728,7 +728,7 @@ export default function VideoPlayer({
                           className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/10 rounded text-gray-200"
                         >
                           <span>{lvl.label}</span>
-                          {currentQuality === lvl.index && <Check className="w-4 h-4 text-red-500" />}
+                          {currentQuality === lvl.index && <Check className="w-4 h-4 text-emerald-400" />}
                         </button>
                       ))}
                     </div>
@@ -749,7 +749,7 @@ export default function VideoPlayer({
                           className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-white/10 rounded text-gray-200"
                         >
                           <span>{spd === 1 ? 'Normal (1x)' : `${spd}x`}</span>
-                          {playbackSpeed === spd && <Check className="w-4 h-4 text-red-500" />}
+                          {playbackSpeed === spd && <Check className="w-4 h-4 text-emerald-400" />}
                         </button>
                       ))}
                     </div>

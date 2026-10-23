@@ -169,45 +169,45 @@ export default function AdminPage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white font-sans flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-zinc-900/90 border border-zinc-800 rounded-2xl shadow-2xl p-8 backdrop-blur text-center">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-4">
+        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-8 backdrop-blur text-center">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto mb-4">
             <Lock className="w-6 h-6" />
           </div>
 
           <h1 className="text-2xl font-black tracking-tight mb-1">Admin Portal Access</h1>
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs text-zinc-400 mb-6">
             Only the administrator can add movies, manage anime series, or delete catalog titles.
           </p>
 
           {authError && (
-            <div className="mb-4 p-2.5 bg-red-950/60 border border-red-800/80 rounded-lg text-xs text-red-300">
+            <div className="mb-4 p-2.5 bg-red-950/40 border border-red-800/60 rounded-lg text-xs text-red-300">
               {authError}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="text-left">
-              <label className="text-xs font-semibold text-gray-400 mb-1 block">Admin Passkey</label>
+              <label className="text-xs font-semibold text-zinc-400 mb-1 block">Admin Passkey</label>
               <input
                 type="password"
                 placeholder="Enter passkey (default: admin123)"
                 value={passkeyInput}
                 onChange={(e) => setPasskeyInput(e.target.value)}
                 autoFocus
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white outline-none focus:border-amber-500 font-mono tracking-wider"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-sm text-white outline-none focus:border-emerald-500 font-mono tracking-wider"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-amber-500/20"
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-emerald-500/20"
             >
               Authenticate as Admin
             </button>
           </form>
 
           <div className="mt-6 pt-4 border-t border-zinc-800/80">
-            <Link href="/" className="text-xs text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition-colors">
+            <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-1.5 transition-colors">
               <ArrowLeft className="w-3.5 h-3.5" />
               Return to Public Viewer Mode
             </Link>
@@ -269,11 +269,11 @@ export default function AdminPage() {
           onClick={() => setActiveTab('content')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'content'
-              ? 'border-red-500 text-white'
-              : 'border-transparent text-gray-500 hover:text-gray-300'
+              ? 'border-emerald-500 text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <Film className="w-4 h-4" />
+          <Film className="w-4 h-4 text-emerald-400" />
           <span>Catalog & Anime Series ({titles.length})</span>
         </button>
 
@@ -281,11 +281,11 @@ export default function AdminPage() {
           onClick={() => setActiveTab('transcoder')}
           className={`pb-3 px-4 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'transcoder'
-              ? 'border-red-500 text-white'
-              : 'border-transparent text-gray-500 hover:text-gray-300'
+              ? 'border-emerald-500 text-white'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
           }`}
         >
-          <Cpu className="w-4 h-4" />
+          <Cpu className="w-4 h-4 text-zinc-400" />
           <span>Transcoder Engine Simulator</span>
         </button>
       </div>
@@ -294,22 +294,22 @@ export default function AdminPage() {
       {activeTab === 'content' && (
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header Action Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/60 border border-zinc-800 p-5 rounded-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900 border border-zinc-800 p-5 rounded-2xl">
             <div>
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
                 <span>Manage Anime Series & Movies</span>
-                <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-bold">
-                  Full Editing Enabled
+                <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded font-bold">
+                  Editing Enabled
                 </span>
               </h2>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-zinc-400 mt-1">
                 Upload new videos, or click <strong>Edit</strong> on any existing anime to add Episode 2, 3, etc. or change details.
               </p>
             </div>
 
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-5 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all hover:scale-105 flex-shrink-0"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-5 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 flex-shrink-0"
             >
               <UploadCloud className="w-4 h-4" />
               <span>+ Add New Title</span>
@@ -318,13 +318,13 @@ export default function AdminPage() {
 
           {/* Titles Table */}
           {titles.length === 0 ? (
-            <div className="p-12 text-center bg-zinc-900/30 border border-dashed border-zinc-800 rounded-2xl">
+            <div className="p-12 text-center bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl">
               <FileVideo className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-gray-300 mb-1">No Videos in SQLite Database Yet</h3>
-              <p className="text-xs text-gray-500 mb-4">Click below to upload your first local MP4 video or anime episode.</p>
+              <h3 className="text-base font-bold text-zinc-300 mb-1">No Videos in Database Yet</h3>
+              <p className="text-xs text-zinc-500 mb-4">Click below to upload your first local MP4 video or anime episode.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg"
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg"
               >
                 Upload First Video
               </button>
@@ -367,33 +367,27 @@ export default function AdminPage() {
                                   </span>
                                 )}
                                 {t.clipUrl && (
-                                  <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/30 px-1.5 py-0.2 rounded font-semibold flex items-center gap-1" title="Short background clip attached">
+                                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-1.5 py-0.2 rounded font-semibold flex items-center gap-1" title="Short background clip attached">
                                     <Sparkles className="w-2.5 h-2.5" /> Clip
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-gray-500 line-clamp-1">{t.synopsis}</p>
+                              <p className="text-[11px] text-zinc-500 line-clamp-1">{t.synopsis}</p>
                             </div>
                           </div>
                         </td>
 
                         <td className="p-4">
                           <span
-                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${
-                              t.type === 'anime'
-                                ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                                : t.type === 'movie'
-                                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            }`}
+                            className="text-[10px] font-bold uppercase px-2 py-0.5 rounded border bg-zinc-900 text-zinc-300 border-zinc-800"
                           >
                             {t.type}
                           </span>
                         </td>
 
-                        <td className="p-4 text-gray-300">
+                        <td className="p-4 text-zinc-300">
                           {t.type === 'movie' ? (
-                            <span className="font-mono text-[11px] text-gray-400">
+                            <span className="font-mono text-[11px] text-zinc-400">
                               {t.videoUrl?.includes('.mp4') ? 'Local MP4' : 'HLS Stream'}
                             </span>
                           ) : (
@@ -401,8 +395,8 @@ export default function AdminPage() {
                           )}
                         </td>
 
-                        <td className="p-4 text-gray-400">
-                          {t.releaseYear} • <span className="text-gray-300 font-medium">{t.rating}</span>
+                        <td className="p-4 text-zinc-400">
+                          {t.releaseYear} • <span className="text-zinc-300 font-medium">{t.rating}</span>
                         </td>
 
                         <td className="p-4 text-right">
@@ -410,7 +404,7 @@ export default function AdminPage() {
                             {/* Edit / Add Episodes Button */}
                             <button
                               onClick={() => setEditingTitle(t)}
-                              className="px-2.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 transition-all flex items-center gap-1 text-xs font-semibold"
+                              className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-zinc-700/80 transition-all flex items-center gap-1 text-xs font-semibold"
                               title="Edit Series & Add Episodes"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -420,7 +414,7 @@ export default function AdminPage() {
                             {/* Play Test */}
                             <Link
                               href={`/watch?titleId=${t.id}`}
-                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white transition-colors"
+                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
                               title="Test Play Stream"
                             >
                               <Play className="w-4 h-4" />
@@ -430,7 +424,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => handleDeleteTitle(t.id, t.title)}
                               disabled={deletingId === t.id}
-                              className="p-1.5 rounded-lg bg-red-950/40 hover:bg-red-800/80 text-red-400 hover:text-white border border-red-800/40 transition-colors"
+                              className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-500 hover:text-red-400 border border-zinc-800 transition-colors"
                               title="Permanently Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -497,10 +491,10 @@ export default function AdminPage() {
                             prev.includes(res) ? prev.filter((r) => r !== res) : [...prev, res]
                           )
                         }
-                        className={`text-xs py-2 px-3 rounded font-bold border transition-all ${
+                        className={`text-xs py-2 px-3 rounded-lg font-bold border transition-all ${
                           active
-                            ? 'bg-red-600 text-white border-red-500 shadow-md'
-                            : 'bg-zinc-800/80 text-gray-400 border-zinc-700 hover:text-white'
+                            ? 'bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/20'
+                            : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:text-white'
                         }`}
                       >
                         {res} {active && '✓'}
@@ -511,7 +505,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 font-semibold mb-1 block">
+                <label className="text-xs text-zinc-400 font-semibold mb-1 block">
                   HLS Segment Duration ({chunkDuration}s)
                 </label>
                 <input
@@ -521,16 +515,16 @@ export default function AdminPage() {
                   step={1}
                   value={chunkDuration}
                   onChange={(e) => setChunkDuration(Number(e.target.value))}
-                  className="w-full accent-red-600 cursor-pointer"
+                  className="w-full accent-emerald-500 cursor-pointer"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 font-semibold mb-1 block">Video Codec</label>
+                <label className="text-xs text-zinc-400 font-semibold mb-1 block">Video Codec</label>
                 <select
                   value={codec}
                   onChange={(e) => setCodec(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-xs text-white rounded p-2 outline-none"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-xs text-white rounded-lg p-2 outline-none focus:border-emerald-500"
                 >
                   <option value="libx264">H.264 / AVC (Universal Compatibility)</option>
                   <option value="libx265">H.265 / HEVC (40% Better Compression)</option>
@@ -541,10 +535,10 @@ export default function AdminPage() {
               <button
                 onClick={handleSimulateTranscode}
                 disabled={isProcessing}
-                className={`w-full py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-xl ${
+                className={`w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-xl ${
                   isProcessing
-                    ? 'bg-zinc-800 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-600 hover:bg-red-500 text-white'
+                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                    : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20'
                 }`}
               >
                 {isProcessing ? (
@@ -565,17 +559,17 @@ export default function AdminPage() {
           {/* Logs */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-black/90 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
-              <div className="bg-zinc-900/90 px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between text-xs">
+              <div className="bg-zinc-900 px-4 py-2.5 border-b border-zinc-800 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-emerald-400" />
-                  <span className="font-mono text-gray-300 font-bold">worker-ffmpeg-daemon.log</span>
+                  <span className="font-mono text-zinc-300 font-bold">worker-ffmpeg-daemon.log</span>
                 </div>
-                <span className="font-mono text-xs text-gray-400">{progressPercent}%</span>
+                <span className="font-mono text-xs text-zinc-400">{progressPercent}%</span>
               </div>
 
               <div className="w-full bg-zinc-900 h-1">
                 <div
-                  className="bg-red-600 h-full transition-all duration-300"
+                  className="bg-emerald-500 h-full transition-all duration-300"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -834,15 +828,15 @@ function EditSeriesModal({
         </button>
 
         <div className="flex items-center gap-2 mb-1">
-          <Edit3 className="w-5 h-5 text-blue-500" />
+          <Edit3 className="w-5 h-5 text-emerald-400" />
           <h2 className="text-xl font-black">Edit Series & Add Episodes</h2>
         </div>
-        <p className="text-xs text-gray-400 mb-5">
+        <p className="text-xs text-zinc-400 mb-5">
           Modify &quot;{titleData.title}&quot; or attach more episodes to its playlist.
         </p>
 
         {errorMsg && (
-          <div className="mb-4 p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-xs text-red-300 flex items-center gap-2">
+          <div className="mb-4 p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -850,58 +844,58 @@ function EditSeriesModal({
 
         <form onSubmit={handleSave} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
           {/* Section 1: Basic Series Details */}
-          <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">1. Series Metadata</h3>
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">1. Series Metadata</h3>
 
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2">
-                <label className="text-xs text-gray-400 block mb-1">Title</label>
+                <label className="text-xs text-zinc-400 block mb-1">Title</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:border-blue-500"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:border-emerald-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Year</label>
+                <label className="text-xs text-zinc-400 block mb-1">Year</label>
                 <input
                   type="number"
                   value={releaseYear}
                   onChange={(e) => setReleaseYear(e.target.value)}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-gray-400 block mb-1">Synopsis</label>
+              <label className="text-xs text-zinc-400 block mb-1">Synopsis</label>
               <textarea
                 rows={2}
                 value={synopsis}
                 onChange={(e) => setSynopsis(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:border-emerald-500"
               />
             </div>
           </div>
 
           {/* Section 2: Custom Poster Artwork & Background Video Clip */}
-          <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+          <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
               2. Custom Artwork & Short Video Clip
             </h3>
 
             {/* Poster / Backdrop */}
             <div className="space-y-1.5">
-              <label className="text-xs text-gray-300 font-semibold flex items-center justify-between">
+              <label className="text-xs text-zinc-300 font-semibold flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+                  <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
                   Custom Poster Artwork
                 </span>
                 {isUploadingPoster && (
-                  <span className="text-[11px] text-blue-400 flex items-center gap-1 animate-pulse">
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
                     <RefreshCw className="w-3 h-3 animate-spin" /> Uploading image...
                   </span>
                 )}
@@ -916,7 +910,7 @@ function EditSeriesModal({
                     className="w-10 h-10 object-cover rounded border border-zinc-700 flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-gray-600">
+                  <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-zinc-600">
                     <ImageIcon className="w-4 h-4" />
                   </div>
                 )}
@@ -929,10 +923,10 @@ function EditSeriesModal({
                     setPosterUrl(e.target.value);
                     setBackdropUrl(e.target.value);
                   }}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local image from computer">
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local image from computer">
                   <UploadCloud className="w-4 h-4" />
                   <span>Upload Poster</span>
                   <input
@@ -947,13 +941,13 @@ function EditSeriesModal({
 
             {/* Short Background Video Clip */}
             <div className="space-y-1.5 pt-1">
-              <label className="text-xs text-gray-300 font-semibold flex items-center justify-between">
+              <label className="text-xs text-zinc-300 font-semibold flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                   Short Background Video Clip (.mp4)
                 </span>
                 {isUploadingClip && (
-                  <span className="text-[11px] text-amber-400 flex items-center gap-1 animate-pulse">
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
                     <RefreshCw className="w-3 h-3 animate-spin" /> Uploading clip...
                   </span>
                 )}
@@ -965,10 +959,10 @@ function EditSeriesModal({
                   placeholder="Short clip URL (/uploads/videos/... or https://...)"
                   value={clipUrl}
                   onChange={(e) => setClipUrl(e.target.value)}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local short clip from computer">
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local short clip from computer">
                   <Video className="w-4 h-4" />
                   <span>Upload Clip</span>
                   <input
@@ -979,7 +973,7 @@ function EditSeriesModal({
                   />
                 </label>
               </div>
-              <p className="text-[10px] text-gray-500">
+              <p className="text-[10px] text-zinc-500">
                 Auto-plays silently on the background display when this movie or anime is selected.
               </p>
             </div>
@@ -987,19 +981,19 @@ function EditSeriesModal({
 
           {/* Section 3: Episode Playlist Management */}
           {(type === 'anime' || type === 'series') ? (
-            <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-3">
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">
                     3. Episodes Playlist ({episodes.length})
                   </h3>
-                  <p className="text-[11px] text-gray-500">Add Episode 2, Episode 3, or edit existing files.</p>
+                  <p className="text-[11px] text-zinc-500">Add Episode 2, Episode 3, or edit existing files.</p>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleAddNewEpisode}
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow"
+                  className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors shadow shadow-emerald-500/20"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ Add Episode</span>
@@ -1010,11 +1004,11 @@ function EditSeriesModal({
                 {episodes.map((ep, idx) => (
                   <div key={idx} className="p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2 relative group">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-blue-400">Episode {idx + 1}</span>
+                      <span className="text-xs font-bold text-emerald-400">Episode {idx + 1}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveEpisode(idx)}
-                        className="text-gray-500 hover:text-red-400 p-1 transition-colors"
+                        className="text-zinc-500 hover:text-red-400 p-1 transition-colors"
                         title="Delete this episode"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -1031,7 +1025,7 @@ function EditSeriesModal({
                           copy[idx].title = e.target.value;
                           setEpisodes(copy);
                         }}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white outline-none"
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white outline-none focus:border-emerald-500"
                       />
 
                       <div className="flex items-center gap-2">
@@ -1044,11 +1038,11 @@ function EditSeriesModal({
                             copy[idx].videoUrl = e.target.value;
                             setEpisodes(copy);
                           }}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none"
+                          className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none focus:border-emerald-500"
                         />
 
                         {/* Local File Picker for this specific episode */}
-                        <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded cursor-pointer border border-zinc-700 flex-shrink-0" title="Upload local MP4 for this episode">
+                        <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded cursor-pointer border border-zinc-700 flex-shrink-0" title="Upload local MP4 for this episode">
                           <UploadCloud className="w-4 h-4" />
                           <input
                             type="file"
@@ -1061,7 +1055,7 @@ function EditSeriesModal({
                     </div>
 
                     {uploadingIndex === idx && (
-                      <p className="text-[11px] text-blue-400 flex items-center gap-1.5 animate-pulse">
+                      <p className="text-[11px] text-emerald-400 flex items-center gap-1.5 animate-pulse">
                         <RefreshCw className="w-3 h-3 animate-spin" />
                         Uploading local video for Episode {idx + 1}...
                       </p>
@@ -1071,13 +1065,13 @@ function EditSeriesModal({
               </div>
             </div>
           ) : (
-            <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-2">
-              <label className="text-xs text-gray-400 font-bold block">Movie Video Source (.mp4 or .m3u8)</label>
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-2">
+              <label className="text-xs text-zinc-400 font-bold block">Movie Video Source (.mp4 or .m3u8)</label>
               <input
                 type="text"
                 value={movieVideoUrl}
                 onChange={(e) => setMovieVideoUrl(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none focus:border-emerald-500"
               />
             </div>
           )}
@@ -1087,12 +1081,12 @@ function EditSeriesModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm rounded-xl transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Saving Updates to SQLite...
+                  Saving Updates to Database...
                 </>
               ) : (
                 <>
@@ -1314,15 +1308,15 @@ function SimpleVideoUploadModal({
         </button>
 
         <div className="flex items-center gap-2 mb-1">
-          <UploadCloud className="w-5 h-5 text-red-500" />
+          <UploadCloud className="w-5 h-5 text-emerald-400" />
           <h2 className="text-xl font-black">Upload Local Video (.mp4)</h2>
         </div>
-        <p className="text-xs text-gray-400 mb-5">
+        <p className="text-xs text-zinc-400 mb-5">
           Select a video from your computer. It will be copied into your app and added to your database automatically.
         </p>
 
         {errorMsg && (
-          <div className="mb-4 p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-xs text-red-300 flex items-center gap-2">
+          <div className="mb-4 p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-300 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -1334,7 +1328,7 @@ function SimpleVideoUploadModal({
             className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
               uploadedVideoUrl
                 ? 'border-emerald-500/50 bg-emerald-950/10'
-                : 'border-zinc-800 hover:border-red-500/60 bg-zinc-900/50 hover:bg-zinc-900'
+                : 'border-zinc-800 hover:border-emerald-500/60 bg-zinc-900/50 hover:bg-zinc-900'
             }`}
           >
             <input
@@ -1347,10 +1341,10 @@ function SimpleVideoUploadModal({
 
             {isUploading ? (
               <div className="space-y-3 py-2">
-                <RefreshCw className="w-8 h-8 text-red-500 animate-spin mx-auto" />
-                <p className="text-xs font-bold text-gray-200">Uploading {selectedFile?.name}...</p>
+                <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
+                <p className="text-xs font-bold text-zinc-200">Uploading {selectedFile?.name}...</p>
                 <div className="w-48 bg-zinc-800 h-1.5 rounded-full mx-auto overflow-hidden">
-                  <div className="bg-red-600 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                 </div>
               </div>
             ) : uploadedVideoUrl ? (
@@ -1363,23 +1357,23 @@ function SimpleVideoUploadModal({
               </div>
             ) : (
               <div className="space-y-2 py-3">
-                <FileVideo className="w-8 h-8 text-red-500 mx-auto" />
+                <FileVideo className="w-8 h-8 text-emerald-400 mx-auto" />
                 <p className="text-xs font-bold text-white">Click to choose a video file (.mp4)</p>
-                <p className="text-[11px] text-gray-500">or drag and drop your movie or episode here</p>
+                <p className="text-[11px] text-zinc-500">or drag and drop your movie or episode here</p>
               </div>
             )}
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-300 mb-1.5 block">Format</label>
+            <label className="text-xs font-bold text-zinc-300 mb-1.5 block">Format</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setFormat('movie')}
                 className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                   format === 'movie'
-                    ? 'bg-red-600 text-white border-red-500 shadow-md'
-                    : 'bg-zinc-900 text-gray-400 border-zinc-800 hover:text-white'
+                    ? 'bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/20'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
                 }`}
               >
                 <Film className="w-4 h-4" />
@@ -1391,8 +1385,8 @@ function SimpleVideoUploadModal({
                 onClick={() => setFormat('anime')}
                 className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
                   format === 'anime'
-                    ? 'bg-red-600 text-white border-red-500 shadow-md'
-                    : 'bg-zinc-900 text-gray-400 border-zinc-800 hover:text-white'
+                    ? 'bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/20'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
                 }`}
               >
                 <Tv className="w-4 h-4" />
@@ -1403,23 +1397,23 @@ function SimpleVideoUploadModal({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="text-xs font-semibold text-gray-400 mb-1 block">Title *</label>
+              <label className="text-xs font-semibold text-zinc-400 mb-1 block">Title *</label>
               <input
                 type="text"
                 placeholder="e.g. My Favorite Movie or Anime Name"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-red-500"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-gray-400 mb-1 block">Genre</label>
+              <label className="text-xs font-semibold text-zinc-400 mb-1 block">Genre</label>
               <select
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
               >
                 <option value="Action">Action</option>
                 <option value="Anime">Anime</option>
@@ -1433,47 +1427,47 @@ function SimpleVideoUploadModal({
 
           {format === 'anime' && (
             <div>
-              <label className="text-xs font-semibold text-gray-400 mb-1 block">Episode Name</label>
+              <label className="text-xs font-semibold text-zinc-400 mb-1 block">Episode Name</label>
               <input
                 type="text"
                 placeholder="e.g. Episode 1: Pilot"
                 value={episodeTitle}
                 onChange={(e) => setEpisodeTitle(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
               />
             </div>
           )}
 
           <div>
-            <label className="text-xs font-semibold text-gray-400 mb-1 block">Short Description (Optional)</label>
+            <label className="text-xs font-semibold text-zinc-400 mb-1 block">Short Description (Optional)</label>
             <input
               type="text"
               placeholder="A brief sentence about this video..."
               value={synopsis}
               onChange={(e) => setSynopsis(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Custom Artwork & Short Background Clip Section */}
-          <div className="p-3.5 bg-zinc-900/60 border border-zinc-800/90 rounded-xl space-y-3">
+          <div className="p-3.5 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
                 Custom Poster Artwork & Short Background Clip
               </span>
-              <span className="text-[10px] text-gray-500 font-medium">Optional Enhancements</span>
+              <span className="text-[10px] text-zinc-500 font-medium">Optional Enhancements</span>
             </div>
 
             {/* Custom Poster Artwork */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-gray-300 font-semibold flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+                <label className="text-xs text-zinc-300 font-semibold flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-emerald-400" />
                   Custom Poster Artwork
                 </label>
                 {isUploadingPoster && (
-                  <span className="text-[11px] text-blue-400 flex items-center gap-1 animate-pulse">
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
                     <RefreshCw className="w-3 h-3 animate-spin" /> Uploading image...
                   </span>
                 )}
@@ -1488,7 +1482,7 @@ function SimpleVideoUploadModal({
                     className="w-10 h-10 object-cover rounded border border-zinc-700 flex-shrink-0"
                   />
                 ) : (
-                  <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-gray-600">
+                  <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-zinc-600">
                     <ImageIcon className="w-4 h-4" />
                   </div>
                 )}
@@ -1498,10 +1492,10 @@ function SimpleVideoUploadModal({
                   placeholder="Image URL or upload from your device"
                   value={customPosterUrl}
                   onChange={(e) => setCustomPosterUrl(e.target.value)}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local poster image">
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local poster image">
                   <UploadCloud className="w-4 h-4" />
                   <span>Upload Poster</span>
                   <input
@@ -1517,12 +1511,12 @@ function SimpleVideoUploadModal({
             {/* Short Background Video Clip */}
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-gray-300 font-semibold flex items-center gap-1.5">
-                  <Video className="w-3.5 h-3.5 text-red-400" />
+                <label className="text-xs text-zinc-300 font-semibold flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5 text-emerald-400" />
                   Short Background Video Clip / Trailer (.mp4)
                 </label>
                 {isUploadingClip && (
-                  <span className="text-[11px] text-red-400 flex items-center gap-1 animate-pulse">
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
                     <RefreshCw className="w-3 h-3 animate-spin" /> Uploading clip...
                   </span>
                 )}
@@ -1534,10 +1528,10 @@ function SimpleVideoUploadModal({
                   placeholder="Video clip URL or upload short .mp4"
                   value={customClipUrl}
                   onChange={(e) => setCustomClipUrl(e.target.value)}
-                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload short video clip (.mp4)">
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload short video clip (.mp4)">
                   <Video className="w-4 h-4" />
                   <span>Upload Clip</span>
                   <input
@@ -1548,7 +1542,7 @@ function SimpleVideoUploadModal({
                   />
                 </label>
               </div>
-              <p className="text-[10px] text-gray-400">
+              <p className="text-[10px] text-zinc-500">
                 ✨ When viewers select this movie or anime, this short clip will automatically play on the background display!
               </p>
             </div>
@@ -1558,7 +1552,7 @@ function SimpleVideoUploadModal({
             <button
               type="submit"
               disabled={isUploading || !uploadedVideoUrl}
-              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm rounded-xl transition-all shadow-xl disabled:opacity-40 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-40 flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
               <span>Save & Publish to StreamHub</span>

@@ -40,8 +40,8 @@ function WatchContent() {
   if (loading) {
     return (
       <div className="w-screen h-screen bg-black flex flex-col items-center justify-center text-white">
-        <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xs text-gray-400 font-mono">Loading video from database...</p>
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs text-zinc-400 font-mono">Loading stream from database...</p>
       </div>
     );
   }
@@ -50,10 +50,10 @@ function WatchContent() {
     return (
       <div className="w-screen h-screen bg-black flex flex-col items-center justify-center text-white p-4">
         <h2 className="text-2xl font-bold mb-2">Video Not Found</h2>
-        <p className="text-gray-400 mb-6 text-sm">The title could not be found in your SQLite database.</p>
+        <p className="text-zinc-400 mb-6 text-sm">The title could not be found in your database.</p>
         <button
           onClick={() => router.push('/')}
-          className="bg-red-600 hover:bg-red-700 px-6 py-2.5 rounded-lg font-bold text-sm transition-colors"
+          className="bg-emerald-500 hover:bg-emerald-400 text-black px-6 py-2.5 rounded-xl font-bold text-sm transition-all"
         >
           Return to Browse
         </button>

@@ -47,7 +47,7 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
             <span>{title}</span>
           </h2>
           {badge && (
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/25 backdrop-blur-sm">
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 backdrop-blur-sm">
               {badge}
             </span>
           )}
@@ -64,7 +64,7 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
         {showLeftArrow && (
           <button
             onClick={() => handleScroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 md:-ml-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-white/10 shadow-2xl hover:scale-110 active:scale-95"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 md:-ml-4 z-30 p-2.5 rounded-full bg-zinc-950/90 hover:bg-zinc-900 text-zinc-300 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-zinc-800 shadow-2xl hover:scale-110 active:scale-95"
             title="Scroll Left"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -87,7 +87,7 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
         {showRightArrow && (
           <button
             onClick={() => handleScroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 md:-mr-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-white/10 shadow-2xl hover:scale-110 active:scale-95"
+            className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 md:-mr-4 z-30 p-2.5 rounded-full bg-zinc-950/90 hover:bg-zinc-900 text-zinc-300 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-zinc-800 shadow-2xl hover:scale-110 active:scale-95"
             title="Scroll Right"
           >
             <ChevronRight className="w-5 h-5" />
