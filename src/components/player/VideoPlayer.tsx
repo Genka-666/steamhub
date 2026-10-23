@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
 import Hls from 'hls.js';
 import {
   Play,
@@ -474,12 +475,18 @@ export default function VideoPlayer({
 
           setIsBuffering(false);
           setHasError(true);
-          const codeNames: Record<number, string> = {
-            2: 'Network error loading video file.',
-            3: 'Decoding error: browser was unable to decode this file.',
-            4: 'Codec not supported by your browser.',
-          };
-          setErrorMessage(codeNames[err.code] || `Error Code ${err.code}: ${err.message}`);
+          if (src?.startsWith('/uploads/')) {
+            setErrorMessage(
+              'This video was uploaded locally on developer storage and is not hosted on the cloud. Go to /admin and link an online stream URL (HLS .m3u8 or MP4) for cloud viewing.'
+            );
+          } else {
+            const codeNames: Record<number, string> = {
+              2: 'Network error loading video file.',
+              3: 'Decoding error: browser was unable to decode this file.',
+              4: 'Codec not supported by your browser or stream is offline.',
+            };
+            setErrorMessage(codeNames[err.code] || `Error Code ${err.code}: ${err.message}`);
+          }
         }}
         onTimeUpdate={handleTimeUpdate}
         preload="auto"
@@ -492,12 +499,20 @@ export default function VideoPlayer({
           <AlertTriangle className="w-12 h-12 text-emerald-400 mb-3" />
           <h3 className="text-xl font-bold text-white mb-1">Playback Error</h3>
           <p className="text-xs text-zinc-400 max-w-sm mb-6">{errorMessage}</p>
-          <button
-            onClick={onBack}
-            className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-6 py-2.5 rounded-xl text-xs transition-colors"
-          >
-            Return to Browse
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-4 py-2.5 rounded-xl text-xs transition-colors"
+            >
+              Return to Browse
+            </button>
+            <Link
+              href="/admin"
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-4 py-2.5 rounded-xl text-xs transition-colors"
+            >
+              Edit in Admin
+            </Link>
+          </div>
         </div>
       )}
 

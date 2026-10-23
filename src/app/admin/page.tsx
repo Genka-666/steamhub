@@ -814,8 +814,10 @@ function EditSeriesModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 25 * 1024 * 1024) {
-      setErrorMsg('Clip file is too large (>25MB). Please enter a direct video URL.');
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg(
+        `Video clip file is too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 2MB). Vercel serverless has a 4.5MB request limit. Please provide a direct video URL or click one of the quick sample clips below.`
+      );
       return;
     }
 
@@ -855,6 +857,14 @@ function EditSeriesModal({
       return;
     }
 
+    // Guard against oversized base64 video clips that would trigger Vercel's 4.5MB 413 error
+    if (clipUrl && clipUrl.startsWith('data:video/') && clipUrl.length > 2.5 * 1024 * 1024) {
+      setErrorMsg(
+        'The video clip file is too large for cloud hosting (exceeds Vercel 4.5MB limit). Please replace it with a direct video URL or click one of the quick sample clips below.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg('');
 
@@ -882,8 +892,21 @@ function EditSeriesModal({
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Failed to update series');
+        let errMsg = 'Failed to update series';
+        try {
+          const text = await res.text();
+          try {
+            const json = JSON.parse(text);
+            errMsg = json.error || json.message || errMsg;
+          } catch {
+            if (res.status === 413 || text.includes('Request Entity Too Large') || text.includes('Payload Too Large')) {
+              errMsg = 'Vercel 4.5MB payload limit exceeded (413). Please use a direct video URL instead of a large embedded video clip.';
+            } else {
+              errMsg = text || `Server error (${res.status})`;
+            }
+          }
+        } catch {}
+        throw new Error(errMsg);
       }
 
       onSuccess();
@@ -1050,6 +1073,33 @@ function EditSeriesModal({
                   />
                 </label>
               </div>
+
+              {/* Quick Sample Clips for instant cloud testing */}
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <span className="text-[10px] text-zinc-500">Quick Working Clips:</span>
+                <button
+                  type="button"
+                  onClick={() => setClipUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4')}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-0.5 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  ⚡ Anime Trailer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClipUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4')}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-0.5 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  ⚡ Cyberpunk 4K
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setClipUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4')}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-0.5 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  ⚡ Sci-Fi Action
+                </button>
+              </div>
+
               <p className="text-[10px] text-zinc-500">
                 Auto-plays silently on the background display when this movie or anime is selected.
               </p>
@@ -1105,7 +1155,7 @@ function EditSeriesModal({
                         className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white outline-none focus:border-emerald-500"
                       />
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <input
                           type="text"
                           placeholder="Video URL (.mp4 or .m3u8)"
@@ -1115,8 +1165,21 @@ function EditSeriesModal({
                             copy[idx].videoUrl = e.target.value;
                             setEpisodes(copy);
                           }}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none focus:border-emerald-500"
+                          className="flex-1 min-w-0 bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-white font-mono outline-none focus:border-emerald-500"
                         />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const copy = [...episodes];
+                            copy[idx].videoUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+                            setEpisodes(copy);
+                          }}
+                          className="p-2 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 hover:text-emerald-300 rounded text-[11px] font-bold border border-zinc-700 flex-shrink-0"
+                          title="Fill with 4K HLS stream"
+                        >
+                          ⚡ HLS
+                        </button>
 
                         {/* Local File Picker for this specific episode */}
                         <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded cursor-pointer border border-zinc-700 flex-shrink-0" title="Upload local MP4 for this episode">
@@ -1313,8 +1376,10 @@ function SimpleVideoUploadModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 25 * 1024 * 1024) {
-      setErrorMsg('Clip file is too large (>25MB). Please enter a direct video URL.');
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg(
+        `Video clip file is too large (${(file.size / 1024 / 1024).toFixed(1)}MB > 2MB). Vercel serverless has a 4.5MB request limit. Please provide a direct video URL or click one of the quick sample clips below.`
+      );
       return;
     }
 
@@ -1360,6 +1425,14 @@ function SimpleVideoUploadModal({
       return;
     }
 
+    // Guard against oversized base64 video clips on Vercel
+    if (customClipUrl && customClipUrl.startsWith('data:video/') && customClipUrl.length > 2.5 * 1024 * 1024) {
+      setErrorMsg(
+        'The video clip file is too large for cloud hosting (exceeds Vercel 4.5MB limit). Please replace it with a direct video URL or click one of the quick sample clips.'
+      );
+      return;
+    }
+
     try {
       const fallbackBackdrop =
         customPosterUrl ||
@@ -1398,8 +1471,21 @@ function SimpleVideoUploadModal({
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to register video in database');
+        let errMsg = 'Failed to register video in database';
+        try {
+          const text = await res.text();
+          try {
+            const json = JSON.parse(text);
+            errMsg = json.error || json.message || errMsg;
+          } catch {
+            if (res.status === 413 || text.includes('Request Entity Too Large') || text.includes('Payload Too Large')) {
+              errMsg = 'Vercel 4.5MB payload limit exceeded (413). Please use a direct video URL instead of embedding large video files.';
+            } else {
+              errMsg = text || `Server error (${res.status})`;
+            }
+          }
+        } catch {}
+        throw new Error(errMsg);
       }
 
       onSuccess();
