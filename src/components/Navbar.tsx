@@ -74,9 +74,14 @@ export default function Navbar() {
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
             <span className="font-black text-black text-base tracking-tighter">S</span>
           </div>
-          <span className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1">
-            STREAM<span className="text-emerald-400">HUB</span>
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xl md:text-2xl font-black tracking-tight text-white">
+              STREAM<span className="text-emerald-400">HUB</span>
+            </span>
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-1.5 py-0.5 rounded-md">
+              WATCHER
+            </span>
+          </div>
           <span className="hidden sm:inline-block text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 rounded-md">
             4K HDR
           </span>

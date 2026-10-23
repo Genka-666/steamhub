@@ -16,7 +16,7 @@ function isAuthorized(request: Request): boolean {
 // GET /api/titles - Public: Anyone (viewers & guests) can fetch catalog titles
 export async function GET() {
   try {
-    const titles = await prisma.title.findMany({
+    let titles = await prisma.title.findMany({
       include: {
         seasons: {
           include: {
@@ -32,6 +32,104 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Auto-seed if database is empty (e.g. freshly initialized on Vercel)
+    if (titles.length === 0) {
+      try {
+        const op = await prisma.title.create({
+          data: {
+            title: 'One Piece',
+            slug: 'one-piece',
+            type: 'anime',
+            synopsis:
+              'In this premiere, a young pirate named Monkey D. Luffy emerges from a barrel on a ship under attack and befriends a timid captive named Koby. Luffy uses his rubber powers to defeat the cruel pirate captain Alvida, freeing Koby and officially launching his grand journey to find the legendary One Piece treasure.',
+            releaseYear: 2024,
+            rating: '16+',
+            qualityBadge: '4K Ultra HD',
+            audioBadge: '5.1 Surround',
+            matchScore: 99,
+            genres: JSON.stringify(['Anime', 'Action', 'Adventure']),
+            cast: JSON.stringify(['Monkey D. Luffy', 'Roronoa Zoro', 'Nami']),
+            director: 'Toei Animation',
+            posterUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
+            backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1920&q=80',
+            clipUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+            introStart: 0,
+            introEnd: 15,
+          },
+        });
+
+        const opSeason = await prisma.season.create({
+          data: {
+            seasonNumber: 1,
+            title: 'Season 1: East Blue',
+            titleId: op.id,
+          },
+        });
+
+        await prisma.episode.createMany({
+          data: [
+            {
+              titleId: op.id,
+              seasonId: opSeason.id,
+              seasonNumber: 1,
+              episodeNumber: 1,
+              title: "I'm Luffy! The Man Who Will Become the Pirate King!",
+              synopsis: 'Luffy meets Koby and takes on the pirate Iron Mace Alvida.',
+              duration: 1420,
+              thumbnailUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80',
+              videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+            },
+            {
+              titleId: op.id,
+              seasonId: opSeason.id,
+              seasonNumber: 1,
+              episodeNumber: 2,
+              title: 'Enter the Great Swordsman! Pirate Hunter Roronoa Zoro!',
+              synopsis: 'Luffy and Koby arrive at Shells Town to recruit the legendary Zoro.',
+              duration: 1380,
+              thumbnailUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=600&q=80',
+              videoUrl: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
+            },
+          ],
+        });
+
+        const movie = await prisma.title.create({
+          data: {
+            title: 'Cyberpunk: Neon City',
+            slug: 'cyberpunk-neon-city',
+            type: 'movie',
+            synopsis:
+              'In a rain-drenched megalopolis run by rogue syndicates, a rogue memory-hunter uncovers a synthetic consciousness capable of resetting the entire global power grid.',
+            releaseYear: 2024,
+            rating: '18+',
+            qualityBadge: '4K Ultra HD',
+            audioBadge: 'Dolby Atmos',
+            matchScore: 98,
+            duration: '2h 18m',
+            genres: JSON.stringify(['Sci-Fi', 'Cyberpunk', 'Action']),
+            cast: JSON.stringify(['Elena Rostova', 'Kenji Sato', 'Marcus Vance']),
+            director: 'StreamHub Watcher Originals',
+            posterUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80',
+            backdropUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
+            videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+            clipUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+            introStart: 5,
+            introEnd: 15,
+          },
+        });
+
+        titles = await prisma.title.findMany({
+          include: {
+            seasons: { include: { episodes: { orderBy: { episodeNumber: 'asc' } } }, orderBy: { seasonNumber: 'asc' } },
+            episodes: { orderBy: { episodeNumber: 'asc' } },
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+      } catch (seedErr) {
+        console.error('Auto-seed fallback error:', seedErr);
+      }
+    }
 
     const formatted = titles.map((t) => ({
       ...t,

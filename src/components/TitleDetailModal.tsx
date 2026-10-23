@@ -190,7 +190,7 @@ export default function TitleDetailModal() {
             <div className="space-y-2.5 text-xs text-zinc-400 border-l border-zinc-800 pl-5">
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Director</span>
-                <span className="text-zinc-300">{activeModalTitle.director || 'StreamHub Studio'}</span>
+                <span className="text-zinc-300">{activeModalTitle.director || 'StreamHub Watcher Studio'}</span>
               </div>
               <div>
                 <span className="text-zinc-500 font-semibold block text-[11px] uppercase tracking-wider">Cast</span>
@@ -265,7 +265,7 @@ export default function TitleDetailModal() {
                           {Math.round(ep.duration / 60)}m
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-400 line-clamp-2">{ep.synopsis || `Watch ${ep.title} on StreamHub.`}</p>
+                      <p className="text-xs text-zinc-400 line-clamp-2">{ep.synopsis || `Watch ${ep.title} on StreamHub Watcher.`}</p>
                     </div>
                   </Link>
                 ))}

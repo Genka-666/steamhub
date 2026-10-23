@@ -232,14 +232,14 @@ export default function AdminPage() {
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tight">Admin Control Center</h1>
+              <h1 className="text-2xl font-black tracking-tight">StreamHub Watcher Admin</h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
                 Authorized
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
-              Add local MP4 videos, modify anime series, and add/edit episodes.
+              Manage streaming catalog, add anime series episodes, movies, and custom artwork.
             </p>
           </div>
         </div>
@@ -618,6 +618,58 @@ export default function AdminPage() {
 }
 
 // ----------------------------------------------------------------------
+// CLIENT-SIDE ASSET PROCESSING (Zero-latency & 100% Serverless / Vercel compatible)
+// ----------------------------------------------------------------------
+const readLocalImageAsDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width / height > MAX_WIDTH / MAX_HEIGHT) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          } else {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        } else {
+          resolve(e.target?.result as string);
+        }
+      };
+      img.onerror = () => resolve(e.target?.result as string);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+const readLocalFileAsDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+// ----------------------------------------------------------------------
 // EDIT EXISTING ANIME / SERIES & ADD EPISODES MODAL
 // ----------------------------------------------------------------------
 interface EditableEpisode {
@@ -728,20 +780,31 @@ function EditSeriesModal({
     setIsUploadingPoster(true);
     setErrorMsg('');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'image');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-token': 'admin123' },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Failed to upload poster image');
-      const data = await res.json();
-      setPosterUrl(data.url);
-      setBackdropUrl(data.url);
+      // Instant client-side compression (0ms, 100% serverless/Vercel compatible)
+      const dataUrl = await readLocalImageAsDataUrl(file);
+      setPosterUrl(dataUrl);
+      setBackdropUrl(dataUrl);
+
+      // Silently try server disk upload (for local server)
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': 'admin123' },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && !data.url.startsWith('data:')) {
+            setPosterUrl(data.url);
+            setBackdropUrl(data.url);
+          }
+        }
+      } catch {}
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error uploading poster');
+      setErrorMsg(err.message || 'Error processing poster');
     } finally {
       setIsUploadingPoster(false);
     }
@@ -750,22 +813,36 @@ function EditSeriesModal({
   const handleUploadClip = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMsg('Clip file is too large (>25MB). Please enter a direct video URL.');
+      return;
+    }
+
     setIsUploadingClip(true);
     setErrorMsg('');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'video');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-token': 'admin123' },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Failed to upload background clip');
-      const data = await res.json();
-      setClipUrl(data.videoUrl || data.url);
+      const dataUrl = await readLocalFileAsDataUrl(file);
+      setClipUrl(dataUrl);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'video');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': 'admin123' },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && !data.url.startsWith('data:')) {
+            setClipUrl(data.url);
+          }
+        }
+      } catch {}
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error uploading clip');
+      setErrorMsg(err.message || 'Error processing clip');
     } finally {
       setIsUploadingClip(false);
     }
@@ -1116,6 +1193,9 @@ function SimpleVideoUploadModal({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Video Source Mode: 'url' (instant, cloud & Vercel ready) or 'file' (local upload)
+  const [sourceMode, setSourceMode] = useState<'url' | 'file'>('url');
+
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -1135,7 +1215,7 @@ function SimpleVideoUploadModal({
   const [title, setTitle] = useState('');
   const [episodeTitle, setEpisodeTitle] = useState('Episode 1');
   const [synopsis, setSynopsis] = useState('');
-  const [genre, setGenre] = useState('Action');
+  const [genre, setGenre] = useState('Anime');
   const [errorMsg, setErrorMsg] = useState('');
 
   // Handle local file selection
@@ -1147,8 +1227,10 @@ function SimpleVideoUploadModal({
     setErrorMsg('');
 
     const rawName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
-    setTitle(rawName);
-    setEpisodeTitle(`Episode 1: ${rawName}`);
+    if (!title) {
+      setTitle(rawName);
+      setEpisodeTitle(`Episode 1: ${rawName}`);
+    }
 
     await uploadLocalVideo(file);
   };
@@ -1173,8 +1255,8 @@ function SimpleVideoUploadModal({
       setUploadProgress(85);
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Upload failed');
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Upload failed. On Vercel, use Direct Stream URL instead.');
       }
 
       const data = await res.json();
@@ -1183,7 +1265,11 @@ function SimpleVideoUploadModal({
       setVideoDuration(data.duration || 1200);
       setUploadProgress(100);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to upload video');
+      setErrorMsg(
+        err.message?.includes('413') || err.message?.includes('Upload failed')
+          ? 'Notice: Vercel serverless has a 4.5MB request limit. Please switch to the "Direct Stream URL" tab to link your cloud video (S3, Cloudinary, HLS .m3u8, or public MP4).'
+          : err.message || 'Failed to upload video'
+      );
     } finally {
       setIsUploading(false);
     }
@@ -1195,19 +1281,29 @@ function SimpleVideoUploadModal({
     setIsUploadingPoster(true);
     setErrorMsg('');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'image');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-token': 'admin123' },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Poster upload failed');
-      const data = await res.json();
-      setCustomPosterUrl(data.url);
+      // 1. Instant client-side compression (0ms, 100% serverless/Vercel compatible)
+      const dataUrl = await readLocalImageAsDataUrl(file);
+      setCustomPosterUrl(dataUrl);
+
+      // 2. Silently attempt server upload if on local disk storage
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'image');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': 'admin123' },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && !data.url.startsWith('data:')) {
+            setCustomPosterUrl(data.url);
+          }
+        }
+      } catch {}
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error uploading poster image');
+      setErrorMsg(err.message || 'Error processing poster image');
     } finally {
       setIsUploadingPoster(false);
     }
@@ -1216,22 +1312,36 @@ function SimpleVideoUploadModal({
   const handleUploadClip = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      setErrorMsg('Clip file is too large (>25MB). Please enter a direct video URL.');
+      return;
+    }
+
     setIsUploadingClip(true);
     setErrorMsg('');
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', 'video');
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-token': 'admin123' },
-        body: formData,
-      });
-      if (!res.ok) throw new Error('Clip upload failed');
-      const data = await res.json();
-      setCustomClipUrl(data.videoUrl || data.url);
+      const dataUrl = await readLocalFileAsDataUrl(file);
+      setCustomClipUrl(dataUrl);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'video');
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'x-admin-token': 'admin123' },
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && !data.url.startsWith('data:')) {
+            setCustomClipUrl(data.url);
+          }
+        }
+      } catch {}
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error uploading background clip');
+      setErrorMsg(err.message || 'Error processing background clip');
     } finally {
       setIsUploadingClip(false);
     }
@@ -1241,7 +1351,7 @@ function SimpleVideoUploadModal({
     e.preventDefault();
 
     if (!uploadedVideoUrl) {
-      setErrorMsg('Please select and upload a local MP4 video file first.');
+      setErrorMsg('Please provide a video URL or select a video file.');
       return;
     }
 
@@ -1259,7 +1369,7 @@ function SimpleVideoUploadModal({
       const payload = {
         title,
         type: format,
-        synopsis: synopsis || `Stream ${title} on StreamHub.`,
+        synopsis: synopsis || `Stream ${title} on StreamHub Watcher.`,
         genres: [genre],
         posterUrl: fallbackBackdrop,
         backdropUrl: fallbackBackdrop,
@@ -1272,7 +1382,7 @@ function SimpleVideoUploadModal({
                   title: episodeTitle || 'Episode 1',
                   videoUrl: uploadedVideoUrl,
                   thumbnailUrl: fallbackBackdrop,
-                  duration: videoDuration,
+                  duration: videoDuration || 1200,
                 },
               ]
             : [],
@@ -1288,7 +1398,8 @@ function SimpleVideoUploadModal({
       });
 
       if (!res.ok) {
-        throw new Error('Failed to register video in database');
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to register video in database');
       }
 
       onSuccess();
@@ -1309,10 +1420,10 @@ function SimpleVideoUploadModal({
 
         <div className="flex items-center gap-2 mb-1">
           <UploadCloud className="w-5 h-5 text-emerald-400" />
-          <h2 className="text-xl font-black">Upload Local Video (.mp4)</h2>
+          <h2 className="text-xl font-black">Add Media to StreamHub Watcher</h2>
         </div>
-        <p className="text-xs text-zinc-400 mb-5">
-          Select a video from your computer. It will be copied into your app and added to your database automatically.
+        <p className="text-xs text-zinc-400 mb-4">
+          Add an anime series episode or single movie using a direct stream URL or upload a local video.
         </p>
 
         {errorMsg && (
@@ -1322,47 +1433,137 @@ function SimpleVideoUploadModal({
           </div>
         )}
 
-        <form onSubmit={handleFinalSubmit} className="space-y-4">
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
-              uploadedVideoUrl
-                ? 'border-emerald-500/50 bg-emerald-950/10'
-                : 'border-zinc-800 hover:border-emerald-500/60 bg-zinc-900/50 hover:bg-zinc-900'
+        {/* Source Mode Switcher */}
+        <div className="flex rounded-xl bg-zinc-900 p-1 border border-zinc-800 mb-4">
+          <button
+            type="button"
+            onClick={() => setSourceMode('url')}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              sourceMode === 'url'
+                ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
             }`}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="video/mp4,video/webm,video/mkv,video/quicktime"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Direct Video / Stream URL</span>
+            <span className="text-[9px] bg-black/20 px-1.5 py-0.5 rounded font-mono">Cloud / Vercel</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSourceMode('file')}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              sourceMode === 'file'
+                ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <FileVideo className="w-3.5 h-3.5" />
+            <span>Upload Local .mp4</span>
+            <span className="text-[9px] bg-black/20 px-1.5 py-0.5 rounded font-mono">Local Dev</span>
+          </button>
+        </div>
 
-            {isUploading ? (
-              <div className="space-y-3 py-2">
-                <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
-                <p className="text-xs font-bold text-zinc-200">Uploading {selectedFile?.name}...</p>
-                <div className="w-48 bg-zinc-800 h-1.5 rounded-full mx-auto overflow-hidden">
-                  <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+        <form onSubmit={handleFinalSubmit} className="space-y-4">
+          {sourceMode === 'url' ? (
+            <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                  <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+                  Video / Stream URL (.mp4 or .m3u8)
+                </label>
+                <span className="text-[10px] text-zinc-500 font-mono">HLS / MP4</span>
+              </div>
+
+              <input
+                type="text"
+                placeholder="e.g. https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8 or https://.../video.mp4"
+                value={uploadedVideoUrl}
+                onChange={(e) => {
+                  setUploadedVideoUrl(e.target.value);
+                  if (!title) {
+                    setTitle('One Piece');
+                    setEpisodeTitle("Episode 1: I'm Luffy! The Man Who Will Become the Pirate King!");
+                  }
+                }}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none font-mono focus:border-emerald-500"
+              />
+
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <span className="text-[10px] text-zinc-500">Quick Test Streams:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadedVideoUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
+                    if (!title) setTitle('Mux Big Buck Bunny (4K HLS)');
+                  }}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-1 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  Mux HLS 4K
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadedVideoUrl('https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8');
+                    if (!title) setTitle('Tears of Steel (4K HLS)');
+                  }}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-1 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  Tears of Steel HLS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadedVideoUrl('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+                    if (!title) setTitle('Big Buck Bunny (MP4)');
+                  }}
+                  className="text-[10px] bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 px-2 py-1 rounded text-zinc-300 hover:text-emerald-400 transition-colors"
+                >
+                  Google Sample MP4
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+                uploadedVideoUrl
+                  ? 'border-emerald-500/50 bg-emerald-950/10'
+                  : 'border-zinc-800 hover:border-emerald-500/60 bg-zinc-900/50 hover:bg-zinc-900'
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/mp4,video/webm,video/mkv,video/quicktime"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {isUploading ? (
+                <div className="space-y-3 py-2">
+                  <RefreshCw className="w-8 h-8 text-emerald-400 animate-spin mx-auto" />
+                  <p className="text-xs font-bold text-zinc-200">Uploading {selectedFile?.name}...</p>
+                  <div className="w-48 bg-zinc-800 h-1.5 rounded-full mx-auto overflow-hidden">
+                    <div className="bg-emerald-500 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  </div>
                 </div>
-              </div>
-            ) : uploadedVideoUrl ? (
-              <div className="flex items-center justify-center gap-3 text-emerald-400 py-2">
-                <CheckCircle2 className="w-7 h-7" />
-                <div className="text-left">
-                  <p className="text-xs font-bold text-white truncate max-w-xs">{selectedFile?.name}</p>
-                  <p className="text-[11px] text-emerald-400/80">Uploaded to StreamHub • Click to change file</p>
+              ) : uploadedVideoUrl ? (
+                <div className="flex items-center justify-center gap-3 text-emerald-400 py-2">
+                  <CheckCircle2 className="w-7 h-7" />
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-white truncate max-w-xs">{selectedFile?.name || uploadedVideoUrl}</p>
+                    <p className="text-[11px] text-emerald-400/80">Ready for StreamHub Watcher • Click to change</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2 py-3">
-                <FileVideo className="w-8 h-8 text-emerald-400 mx-auto" />
-                <p className="text-xs font-bold text-white">Click to choose a video file (.mp4)</p>
-                <p className="text-[11px] text-zinc-500">or drag and drop your movie or episode here</p>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="space-y-2 py-3">
+                  <FileVideo className="w-8 h-8 text-emerald-400 mx-auto" />
+                  <p className="text-xs font-bold text-white">Click to choose a video file (.mp4)</p>
+                  <p className="text-[11px] text-zinc-500">or drag and drop your movie or episode here</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-bold text-zinc-300 mb-1.5 block">Format</label>
@@ -1400,7 +1601,7 @@ function SimpleVideoUploadModal({
               <label className="text-xs font-semibold text-zinc-400 mb-1 block">Title *</label>
               <input
                 type="text"
-                placeholder="e.g. My Favorite Movie or Anime Name"
+                placeholder="e.g. One Piece"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
@@ -1413,14 +1614,14 @@ function SimpleVideoUploadModal({
               <select
                 value={genre}
                 onChange={(e) => setGenre(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500 cursor-pointer"
               >
-                <option value="Action">Action</option>
                 <option value="Anime">Anime</option>
+                <option value="Action">Action</option>
                 <option value="Sci-Fi">Sci-Fi</option>
-                <option value="Personal">Personal / Vlog</option>
-                <option value="Comedy">Comedy</option>
+                <option value="Fantasy">Fantasy</option>
                 <option value="Drama">Drama</option>
+                <option value="Comedy">Comedy</option>
               </select>
             </div>
           </div>
@@ -1430,7 +1631,7 @@ function SimpleVideoUploadModal({
               <label className="text-xs font-semibold text-zinc-400 mb-1 block">Episode Name</label>
               <input
                 type="text"
-                placeholder="e.g. Episode 1: Pilot"
+                placeholder="e.g. I'm Luffy! The Man Who Will Become the Pirate King!"
                 value={episodeTitle}
                 onChange={(e) => setEpisodeTitle(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
@@ -1440,16 +1641,16 @@ function SimpleVideoUploadModal({
 
           <div>
             <label className="text-xs font-semibold text-zinc-400 mb-1 block">Short Description (Optional)</label>
-            <input
-              type="text"
-              placeholder="A brief sentence about this video..."
+            <textarea
+              rows={2}
+              placeholder="Brief summary of what happens in this episode or movie..."
               value={synopsis}
               onChange={(e) => setSynopsis(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-emerald-500"
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none focus:border-emerald-500"
             />
           </div>
 
-          {/* Custom Artwork & Short Background Clip Section */}
+          {/* Custom Artwork & Background Clip Enhancement */}
           <div className="p-3.5 bg-zinc-900 border border-zinc-800 rounded-xl space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
@@ -1468,7 +1669,7 @@ function SimpleVideoUploadModal({
                 </label>
                 {isUploadingPoster && (
                   <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading image...
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Processing image...
                   </span>
                 )}
               </div>
@@ -1495,7 +1696,10 @@ function SimpleVideoUploadModal({
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local poster image">
+                <label
+                  className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0"
+                  title="Upload local poster image"
+                >
                   <UploadCloud className="w-4 h-4" />
                   <span>Upload Poster</span>
                   <input
@@ -1517,7 +1721,7 @@ function SimpleVideoUploadModal({
                 </label>
                 {isUploadingClip && (
                   <span className="text-[11px] text-emerald-400 flex items-center gap-1 animate-pulse">
-                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading clip...
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Processing clip...
                   </span>
                 )}
               </div>
@@ -1531,7 +1735,10 @@ function SimpleVideoUploadModal({
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono focus:border-emerald-500"
                 />
 
-                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload short video clip (.mp4)">
+                <label
+                  className="p-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0"
+                  title="Upload short video clip (.mp4)"
+                >
                   <Video className="w-4 h-4" />
                   <span>Upload Clip</span>
                   <input
@@ -1555,7 +1762,7 @@ function SimpleVideoUploadModal({
               className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm rounded-xl transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-40 flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
-              <span>Save & Publish to StreamHub</span>
+              <span>Save & Publish to StreamHub Watcher</span>
             </button>
           </div>
         </form>

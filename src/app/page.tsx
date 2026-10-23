@@ -237,7 +237,7 @@ export default function Home() {
             <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center font-black text-black text-xs">
               S
             </div>
-            <span className="text-base font-black tracking-tight text-white">STREAM<span className="text-emerald-400">HUB</span></span>
+            <span className="text-base font-black tracking-tight text-white">STREAM<span className="text-emerald-400">HUB</span> <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider ml-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/25 rounded">WATCHER</span></span>
             <span className="text-[11px] text-zinc-500 font-mono">v1.0</span>
           </div>
 

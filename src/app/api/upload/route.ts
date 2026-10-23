@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -30,53 +30,72 @@ export async function POST(request: Request) {
 
     const isImage = uploadType === 'image' || ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'].includes(ext);
 
-    // Write file to either posters or videos folder
+    // Target folder
     const targetFolder = isImage ? 'posters' : 'videos';
-    const diskPath = path.join(process.cwd(), 'public', 'uploads', targetFolder, uniqueFilename);
+    const folderPath = path.join(process.cwd(), 'public', 'uploads', targetFolder);
+    const diskPath = path.join(folderPath, uniqueFilename);
     const publicUrl = `/uploads/${targetFolder}/${uniqueFilename}`;
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(diskPath, buffer);
+
+    let finalUrl = publicUrl;
+    let savedToDisk = false;
+
+    // Try saving to filesystem (works on local development / VPS)
+    try {
+      await mkdir(folderPath, { recursive: true });
+      await writeFile(diskPath, buffer);
+      savedToDisk = true;
+    } catch (fsErr: any) {
+      console.warn('Filesystem write unavailable (e.g. Vercel serverless):', fsErr?.message);
+      // Fallback: Convert to Base64 Data URL so upload succeeds on Vercel
+      const mime = file.type || (isImage ? 'image/jpeg' : 'video/mp4');
+      finalUrl = `data:${mime};base64,${buffer.toString('base64')}`;
+    }
 
     // If it's an image, return URL directly
     if (isImage) {
       return NextResponse.json({
         success: true,
         type: 'image',
-        url: publicUrl,
+        url: finalUrl,
         originalName,
       });
     }
 
     // Video processing
-    let thumbnailUrl = '/uploads/thumbnails/default.jpg';
+    let thumbnailUrl = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
     let duration = 0;
 
-    const thumbFilename = `${Date.now()}_${cleanBase}.jpg`;
-    const thumbDiskPath = path.join(process.cwd(), 'public', 'uploads', 'thumbnails', thumbFilename);
+    if (savedToDisk) {
+      const thumbFolder = path.join(process.cwd(), 'public', 'uploads', 'thumbnails');
+      const thumbFilename = `${Date.now()}_${cleanBase}.jpg`;
+      const thumbDiskPath = path.join(thumbFolder, thumbFilename);
 
-    try {
-      await execAsync(`ffmpeg -y -ss 00:00:02 -i "${diskPath}" -vframes 1 -q:v 2 "${thumbDiskPath}"`);
-      thumbnailUrl = `/uploads/thumbnails/${thumbFilename}`;
-    } catch {
-      thumbnailUrl = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
+      try {
+        await mkdir(thumbFolder, { recursive: true });
+        await execAsync(`ffmpeg -y -ss 00:00:02 -i "${diskPath}" -vframes 1 -q:v 2 "${thumbDiskPath}"`);
+        thumbnailUrl = `/uploads/thumbnails/${thumbFilename}`;
+      } catch {
+        // Fallback to default thumbnail
+      }
+
+      try {
+        const { stdout } = await execAsync(
+          `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${diskPath}"`
+        );
+        duration = Math.round(parseFloat(stdout.trim())) || 0;
+      } catch {}
     }
-
-    try {
-      const { stdout } = await execAsync(
-        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${diskPath}"`
-      );
-      duration = Math.round(parseFloat(stdout.trim())) || 0;
-    } catch {}
 
     return NextResponse.json({
       success: true,
       type: 'video',
-      videoUrl: publicUrl,
-      url: publicUrl,
+      videoUrl: finalUrl,
+      url: finalUrl,
       thumbnailUrl,
-      duration,
+      duration: duration || 1200,
       originalName,
       titleSuggestion: cleanBase.replace(/_/g, ' '),
     });
