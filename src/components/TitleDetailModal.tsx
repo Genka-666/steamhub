@@ -20,6 +20,8 @@ export default function TitleDetailModal() {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const clipSource = activeModalTitle?.clipUrl || (activeModalTitle?.type === 'movie' ? activeModalTitle.videoUrl : undefined);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -36,15 +38,9 @@ export default function TitleDetailModal() {
     };
   }, [activeModalTitle, setActiveModalTitle]);
 
-  if (!activeModalTitle) return null;
-
-  const inList = isInWatchlist(activeModalTitle.id);
-  const currentSeasonData = activeModalTitle.seasons?.find((s) => s.seasonNumber === selectedSeason) || activeModalTitle.seasons?.[0];
-  const clipSource = activeModalTitle.clipUrl || (activeModalTitle.type === 'movie' ? activeModalTitle.videoUrl : undefined);
-
   useEffect(() => {
     setVideoLoaded(false);
-  }, [activeModalTitle.id, clipSource]);
+  }, [activeModalTitle?.id, clipSource]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -62,6 +58,11 @@ export default function TitleDetailModal() {
       }
     }
   };
+
+  if (!activeModalTitle) return null;
+
+  const inList = isInWatchlist(activeModalTitle.id);
+  const currentSeasonData = activeModalTitle.seasons?.find((s) => s.seasonNumber === selectedSeason) || activeModalTitle.seasons?.[0];
 
   const similarTitles = titles.filter(
     (t) => t.id !== activeModalTitle.id && t.genres.some((g) => activeModalTitle.genres.includes(g))
