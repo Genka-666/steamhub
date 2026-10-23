@@ -410,10 +410,19 @@ export default function VideoPlayer({
         onPlaying={() => setIsBuffering(false)}
         onCanPlay={() => setIsBuffering(false)}
         onLoadedData={() => setIsBuffering(false)}
-        onError={() => {
+        onError={(e) => {
+          const v = e.currentTarget as HTMLVideoElement;
+          const err = v.error;
           setIsBuffering(false);
           setHasError(true);
-          setErrorMessage('Unable to play video file. Please check file format.');
+          const codeNames: Record<number, string> = {
+            1: 'MEDIA_ERR_ABORTED (Playback aborted)',
+            2: 'MEDIA_ERR_NETWORK (Network error loading video file)',
+            3: 'MEDIA_ERR_DECODE (Decoder error - file cannot be decoded)',
+            4: 'MEDIA_ERR_SRC_NOT_SUPPORTED (Browser lacks codec to play this video)',
+          };
+          const detail = err ? codeNames[err.code] || `Code ${err.code}: ${err.message}` : 'Browser failed to load media';
+          setErrorMessage(detail);
         }}
         onTimeUpdate={handleTimeUpdate}
         preload="auto"
