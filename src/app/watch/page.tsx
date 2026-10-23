@@ -30,7 +30,7 @@ function WatchContent() {
         setTitle(data);
       })
       .catch((err) => {
-        console.error(err);
+        console.error('Failed to load title from database:', err);
       })
       .finally(() => {
         setLoading(false);
@@ -41,7 +41,7 @@ function WatchContent() {
     return (
       <div className="w-screen h-screen bg-black flex flex-col items-center justify-center text-white">
         <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xs text-gray-400 font-mono">Loading stream manifest from database...</p>
+        <p className="text-xs text-gray-400 font-mono">Loading video from database...</p>
       </div>
     );
   }
@@ -62,21 +62,27 @@ function WatchContent() {
   }
 
   // Determine current episode and stream URL
-  let streamUrl = title.videoUrl || 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+  let streamUrl = title.videoUrl || '';
   let subTitleText = '';
   let introStart = title.introStart || 0;
   let introEnd = title.introEnd || 0;
   let hasNextEpisode = false;
   let nextEpisodeId: string | undefined;
 
-  if ((title.type === 'series' || title.type === 'anime') && title.seasons) {
-    const allEpisodes = title.seasons.flatMap((s) => s.episodes || []);
+  // Collect all episodes from seasons or top-level episodes
+  const seasonEpisodes = title.seasons?.flatMap((s) => s.episodes || []) || [];
+  const directEpisodes = (title as any).episodes || [];
+  const allEpisodes = [...seasonEpisodes, ...directEpisodes].filter(
+    (ep, index, self) => index === self.findIndex((e) => e.id === ep.id)
+  );
+
+  if ((title.type === 'series' || title.type === 'anime') && allEpisodes.length > 0) {
     const currentIndex = episodeId ? allEpisodes.findIndex((e) => e.id === episodeId) : 0;
-    const currentEpisode = allEpisodes[currentIndex] || allEpisodes[0];
+    const currentEpisode = allEpisodes[currentIndex >= 0 ? currentIndex : 0];
 
     if (currentEpisode) {
-      streamUrl = currentEpisode.videoUrl;
-      subTitleText = `S${currentEpisode.seasonNumber}:E${currentEpisode.episodeNumber} - ${currentEpisode.title}`;
+      streamUrl = currentEpisode.videoUrl || title.videoUrl || '';
+      subTitleText = `S${currentEpisode.seasonNumber || 1}:E${currentEpisode.episodeNumber || 1} - ${currentEpisode.title}`;
       introStart = currentEpisode.introStart || 0;
       introEnd = currentEpisode.introEnd || 0;
 
@@ -95,6 +101,7 @@ function WatchContent() {
 
   return (
     <VideoPlayer
+      key={streamUrl} // Ensure player resets properly on stream change
       src={streamUrl}
       title={title.title}
       subTitle={subTitleText}

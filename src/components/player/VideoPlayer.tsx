@@ -17,6 +17,7 @@ import {
   Check,
   ChevronRight,
   PictureInPicture,
+  AlertTriangle,
 } from 'lucide-react';
 import { useWatch } from '@/context/WatchContext';
 import { VideoQualityLevel } from '@/types';
@@ -63,7 +64,9 @@ export default function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [isBuffering, setIsBuffering] = useState(true);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Quality settings
   const [qualityLevels, setQualityLevels] = useState<VideoQualityLevel[]>([]);
@@ -78,7 +81,7 @@ export default function VideoPlayer({
 
   // Formatting helpers
   const formatTime = (seconds: number) => {
-    if (isNaN(seconds)) return '00:00';
+    if (isNaN(seconds) || seconds <= 0) return '00:00';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
@@ -89,17 +92,21 @@ export default function VideoPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 1. Initialize HLS & Video Stream
+  // 1. Initialize HLS or Native MP4 Video Stream
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
 
     let hls: Hls | null = null;
+    setIsBuffering(true);
+    setHasError(false);
+    setErrorMessage('');
 
     const savedProgress = getProgress(titleId, episodeId);
-    const initialSeek = savedProgress && savedProgress.currentTime < (savedProgress.duration - 20)
-      ? savedProgress.currentTime
-      : 0;
+    const initialSeek =
+      savedProgress && savedProgress.currentTime < savedProgress.duration - 20
+        ? savedProgress.currentTime
+        : 0;
 
     const isHls = src.includes('.m3u8');
 
@@ -115,6 +122,7 @@ export default function VideoPlayer({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        setIsBuffering(false);
         const levels: VideoQualityLevel[] = data.levels.map((lvl, idx) => ({
           height: lvl.height,
           bitrate: lvl.bitrate,
@@ -127,8 +135,10 @@ export default function VideoPlayer({
           video.currentTime = initialSeek;
         }
 
+        // Try autoplay; if blocked by browser policy, gracefully stop buffering
         video.play().catch(() => {
           setIsPlaying(false);
+          setIsBuffering(false);
         });
       });
 
@@ -141,6 +151,7 @@ export default function VideoPlayer({
 
       hls.on(Hls.Events.ERROR, (_, data) => {
         if (data.fatal) {
+          setIsBuffering(false);
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
               hls?.startLoad();
@@ -149,22 +160,44 @@ export default function VideoPlayer({
               hls?.recoverMediaError();
               break;
             default:
+              setHasError(true);
+              setErrorMessage('Failed to decode streaming manifest.');
               hls?.destroy();
               break;
           }
         }
       });
     } else {
-      // Native MP4 / WebM / Safari playback
+      // Direct Local / Remote MP4 Video Playback
       video.src = src;
-      setActiveQualityLabel('Direct MP4');
-      setQualityLevels([{ height: 1080, bitrate: 4500000, index: 0, label: 'Original Quality' }]);
-      video.addEventListener('loadedmetadata', () => {
+      video.load(); // Force load
+      setActiveQualityLabel('1080p MP4');
+      setQualityLevels([{ height: 1080, bitrate: 4500000, index: 0, label: 'Direct MP4' }]);
+
+      const handleLoadedMetadata = () => {
+        setIsBuffering(false);
         if (initialSeek > 0) {
           video.currentTime = initialSeek;
         }
-        video.play().catch(() => {});
-      });
+        video.play().catch(() => {
+          // Autoplay blocked by browser: graceful fallback to show Big Play Button
+          setIsPlaying(false);
+          setIsBuffering(false);
+        });
+      };
+
+      video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+      video.addEventListener('canplay', () => setIsBuffering(false), { once: true });
+
+      // Fallback timer: if browser doesn't fire loadedmetadata within 1.5s, clear spinner
+      const timeout = setTimeout(() => {
+        setIsBuffering(false);
+      }, 1500);
+
+      return () => {
+        clearTimeout(timeout);
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      };
     }
 
     return () => {
@@ -232,7 +265,9 @@ export default function VideoPlayer({
     if (isPlaying) {
       videoRef.current.pause();
     } else {
-      videoRef.current.play();
+      videoRef.current.play().catch((err) => {
+        console.error('Play request failed:', err);
+      });
     }
   };
 
@@ -303,7 +338,6 @@ export default function VideoPlayer({
   // 5. Global Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Avoid triggering when focused on input fields
       if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
 
       switch (e.key.toLowerCase()) {
@@ -367,19 +401,56 @@ export default function VideoPlayer({
         ref={videoRef}
         className="w-full h-full object-contain cursor-pointer"
         onClick={togglePlay}
-        onPlay={() => setIsPlaying(true)}
+        onPlay={() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+        }}
         onPause={() => setIsPlaying(false)}
         onWaiting={() => setIsBuffering(true)}
         onPlaying={() => setIsBuffering(false)}
+        onCanPlay={() => setIsBuffering(false)}
+        onLoadedData={() => setIsBuffering(false)}
+        onError={() => {
+          setIsBuffering(false);
+          setHasError(true);
+          setErrorMessage('Unable to play video file. Please check file format.');
+        }}
         onTimeUpdate={handleTimeUpdate}
+        preload="auto"
         playsInline
       />
 
+      {/* Error Card Overlay */}
+      {hasError && (
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center p-6 text-center z-40">
+          <AlertTriangle className="w-12 h-12 text-red-500 mb-3" />
+          <h3 className="text-xl font-bold text-white mb-1">Playback Error</h3>
+          <p className="text-xs text-gray-400 max-w-sm mb-6">{errorMessage}</p>
+          <button
+            onClick={onBack}
+            className="bg-red-600 hover:bg-red-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs transition-colors"
+          >
+            Return to Browse
+          </button>
+        </div>
+      )}
+
       {/* Buffering Spinner */}
-      {isBuffering && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {isBuffering && !hasError && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
           <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin shadow-lg" />
         </div>
+      )}
+
+      {/* Big Center Play Button Overlay when paused & ready */}
+      {!isPlaying && !isBuffering && !hasError && (
+        <button
+          onClick={togglePlay}
+          className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-red-600/90 hover:bg-red-500 text-white flex items-center justify-center shadow-2xl transition-all duration-300 hover:scale-110 z-20 group/playbtn"
+          title="Play Video"
+        >
+          <Play className="w-9 h-9 fill-current ml-1 transition-transform group-hover/playbtn:scale-110" />
+        </button>
       )}
 
       {/* Top Header Bar */}
@@ -650,4 +721,3 @@ export default function VideoPlayer({
     </div>
   );
 }
-
