@@ -46,3 +46,9 @@ next-env.d.ts
 *.sqlite
 prisma/dev.db
 prisma/dev.db-journal
+
+# uploads
+/public/uploads/videos/*
+!/public/uploads/videos/.gitkeep
+/public/uploads/thumbnails/*
+!/public/uploads/thumbnails/.gitkeep

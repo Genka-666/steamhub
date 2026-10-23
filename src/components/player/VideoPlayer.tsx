@@ -101,7 +101,9 @@ export default function VideoPlayer({
       ? savedProgress.currentTime
       : 0;
 
-    if (Hls.isSupported()) {
+    const isHls = src.includes('.m3u8');
+
+    if (isHls && Hls.isSupported()) {
       hls = new Hls({
         capLevelToPlayerSize: true,
         autoStartLoad: true,
@@ -152,9 +154,11 @@ export default function VideoPlayer({
           }
         }
       });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Native Apple HLS (Safari)
+    } else {
+      // Native MP4 / WebM / Safari playback
       video.src = src;
+      setActiveQualityLabel('Direct MP4');
+      setQualityLevels([{ height: 1080, bitrate: 4500000, index: 0, label: 'Original Quality' }]);
       video.addEventListener('loadedmetadata', () => {
         if (initialSeek > 0) {
           video.currentTime = initialSeek;

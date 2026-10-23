@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -14,13 +14,16 @@ import {
   Cpu,
   CheckCircle2,
   Terminal,
-  HardDrive,
   RefreshCw,
   Layers,
   LogOut,
   ExternalLink,
+  UploadCloud,
+  FileVideo,
+  Check,
+  AlertCircle,
+  Sparkles,
 } from 'lucide-react';
-import AddMediaModal from '@/components/AddMediaModal';
 import { useWatch } from '@/context/WatchContext';
 import { Title } from '@/types';
 
@@ -229,7 +232,7 @@ export default function AdminPage() {
               </span>
             </div>
             <p className="text-xs text-gray-400 mt-0.5">
-              Manage your personal database: add movies, anime playlists, or transcode master reels.
+              Add your local MP4 videos, manage anime playlists, or transcode master reels.
             </p>
           </div>
         </div>
@@ -264,7 +267,7 @@ export default function AdminPage() {
           }`}
         >
           <Film className="w-4 h-4" />
-          <span>Catalog & Video Playlists ({titles.length})</span>
+          <span>Catalog & Local Videos ({titles.length})</span>
         </button>
 
         <button
@@ -284,34 +287,39 @@ export default function AdminPage() {
       {activeTab === 'content' && (
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header Action Bar */}
-          <div className="flex items-center justify-between bg-zinc-900/60 border border-zinc-800 p-4 rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-zinc-900/60 border border-zinc-800 p-5 rounded-2xl">
             <div>
-              <h2 className="text-sm font-bold text-white">Database Content Management</h2>
-              <p className="text-xs text-gray-400">
-                Only you have permission to add or delete these titles. Regular viewers have read-only access.
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Add Your Local Videos & Movies</span>
+                <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-bold">
+                  MP4 Supported
+                </span>
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">
+                Drop any `.mp4` file from your computer. The system automatically creates thumbnails and makes it streamable.
               </p>
             </div>
 
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all hover:scale-105"
+              className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-5 py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-600/20 transition-all hover:scale-105 flex-shrink-0"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Movie / Anime Playlist</span>
+              <UploadCloud className="w-4 h-4" />
+              <span>+ Upload Local MP4 Video</span>
             </button>
           </div>
 
           {/* Titles Table */}
           {titles.length === 0 ? (
-            <div className="p-12 text-center bg-zinc-900/30 border border-dashed border-zinc-800 rounded-xl">
-              <Film className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-gray-300 mb-1">Your SQLite Catalog is Empty</h3>
-              <p className="text-xs text-gray-500 mb-4">Click below to add your first movie or anime series.</p>
+            <div className="p-12 text-center bg-zinc-900/30 border border-dashed border-zinc-800 rounded-2xl">
+              <FileVideo className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-gray-300 mb-1">No Videos in SQLite Database Yet</h3>
+              <p className="text-xs text-gray-500 mb-4">Click below to upload your first local MP4 video or anime episode.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-4 py-2 rounded-lg"
+                className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg"
               >
-                + Add Content
+                Upload First Video
               </button>
             </div>
           ) : (
@@ -321,24 +329,32 @@ export default function AdminPage() {
                   <tr>
                     <th className="p-4">Media</th>
                     <th className="p-4">Format</th>
-                    <th className="p-4">Episodes / Duration</th>
+                    <th className="p-4">Source / Episodes</th>
                     <th className="p-4">Year / Rating</th>
-                    <th className="p-4 text-right">Admin Actions</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {titles.map((t) => {
                     const episodeCount = t.seasons?.reduce((acc, s) => acc + s.episodes.length, 0) || 0;
+                    const isLocal = t.videoUrl?.startsWith('/uploads/') || t.seasons?.some(s => s.episodes.some(e => e.videoUrl?.startsWith('/uploads/')));
                     return (
                       <tr key={t.id} className="hover:bg-zinc-800/30 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-14 aspect-video rounded overflow-hidden bg-black flex-shrink-0">
+                            <div className="w-16 aspect-video rounded-lg overflow-hidden bg-black flex-shrink-0 border border-zinc-800">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={t.backdropUrl || t.posterUrl} alt={t.title} className="w-full h-full object-cover" />
                             </div>
                             <div>
-                              <p className="font-bold text-white text-sm">{t.title}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-bold text-white text-sm">{t.title}</p>
+                                {isLocal && (
+                                  <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold">
+                                    Local File
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[11px] text-gray-500 line-clamp-1">{t.synopsis}</p>
                             </div>
                           </div>
@@ -360,7 +376,9 @@ export default function AdminPage() {
 
                         <td className="p-4 text-gray-300">
                           {t.type === 'movie' ? (
-                            <span>{t.duration || 'Feature Film'}</span>
+                            <span className="font-mono text-[11px] text-gray-400">
+                              {t.videoUrl?.includes('.mp4') ? 'Local MP4' : 'HLS Stream'}
+                            </span>
                           ) : (
                             <span className="font-semibold">{episodeCount} Episode{episodeCount !== 1 ? 's' : ''}</span>
                           )}
@@ -398,9 +416,10 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Add Media Modal (only accessible inside Admin) */}
+          {/* Super Simple Local MP4 Video Upload Modal */}
           {showAddForm && (
-            <AddMediaModalDirect
+            <SimpleVideoUploadModal
+              existingTitles={titles}
               onClose={() => setShowAddForm(false)}
               onSuccess={async () => {
                 setShowAddForm(false);
@@ -563,243 +582,315 @@ export default function AdminPage() {
   );
 }
 
-// Inline modal with x-admin-token injection
-function AddMediaModalDirect({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [type, setType] = useState<'movie' | 'anime' | 'series'>('anime');
+// ----------------------------------------------------------------------
+// SUPER SIMPLE LOCAL MP4 VIDEO UPLOADER COMPONENT
+// ----------------------------------------------------------------------
+function SimpleVideoUploadModal({
+  existingTitles,
+  onClose,
+  onSuccess,
+}: {
+  existingTitles: Title[];
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState('');
+  const [uploadedThumbUrl, setUploadedThumbUrl] = useState('');
+  const [videoDuration, setVideoDuration] = useState(0);
+
+  // Content form
+  const [format, setFormat] = useState<'movie' | 'anime'>('movie');
   const [title, setTitle] = useState('');
+  const [episodeTitle, setEpisodeTitle] = useState('Episode 1');
   const [synopsis, setSynopsis] = useState('');
-  const [releaseYear, setReleaseYear] = useState('2024');
-  const [rating, setRating] = useState('16+');
-  const [genres, setGenres] = useState<string[]>(['Anime', 'Action']);
-  const [posterUrl, setPosterUrl] = useState('');
-  const [backdropUrl, setBackdropUrl] = useState('');
-  const [videoUrl, setVideoUrl] = useState('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-  const [episodes, setEpisodes] = useState([
-    {
-      title: 'Episode 1: The Awakening',
-      videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-      duration: 1440,
-    },
-    {
-      title: 'Episode 2: The Battle of Fire',
-      videoUrl: 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8',
-      duration: 1380,
-    },
-  ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [genre, setGenre] = useState('Action');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleAddEpisode = () => {
-    setEpisodes((prev) => [
-      ...prev,
-      {
-        title: `Episode ${prev.length + 1}`,
-        videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-        duration: 1400,
-      },
-    ]);
+  // Handle local file selection
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setErrorMsg('');
+
+    // Pre-fill clean title from file name
+    const rawName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+    setTitle(rawName);
+    setEpisodeTitle(`Episode 1: ${rawName}`);
+
+    // Auto-upload the local video
+    await uploadLocalVideo(file);
   };
 
-  const handleRemoveEpisode = (index: number) => {
-    setEpisodes((prev) => prev.filter((_, i) => i !== index));
+  const uploadLocalVideo = async (file: File) => {
+    setIsUploading(true);
+    setUploadProgress(15);
+
+    try {
+      const formData = new FormData();
+      formData.append('video', file);
+
+      setUploadProgress(40);
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'x-admin-token': 'admin123',
+        },
+        body: formData,
+      });
+
+      setUploadProgress(85);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      const data = await res.json();
+      setUploadedVideoUrl(data.videoUrl);
+      setUploadedThumbUrl(data.thumbnailUrl);
+      setVideoDuration(data.duration || 1200);
+      setUploadProgress(100);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to upload video');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setErrorMsg('Please enter a title');
+
+    if (!uploadedVideoUrl) {
+      setErrorMsg('Please select and upload a local MP4 video file first.');
       return;
     }
 
-    setIsSubmitting(true);
-    setErrorMsg('');
+    if (!title.trim()) {
+      setErrorMsg('Please give your video a title.');
+      return;
+    }
 
     try {
+      const fallbackBackdrop =
+        uploadedThumbUrl ||
+        'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80';
+
       const payload = {
         title,
-        type,
-        synopsis,
-        releaseYear: Number(releaseYear),
-        rating,
-        genres,
-        posterUrl: posterUrl.trim() || undefined,
-        backdropUrl: backdropUrl.trim() || undefined,
-        videoUrl: type === 'movie' ? videoUrl : undefined,
-        episodes: (type === 'anime' || type === 'series') ? episodes : [],
+        type: format,
+        synopsis: synopsis || `Stream ${title} on StreamHub.`,
+        genres: [genre],
+        posterUrl: fallbackBackdrop,
+        backdropUrl: fallbackBackdrop,
+        videoUrl: format === 'movie' ? uploadedVideoUrl : undefined,
+        episodes:
+          format === 'anime'
+            ? [
+                {
+                  title: episodeTitle || 'Episode 1',
+                  videoUrl: uploadedVideoUrl,
+                  thumbnailUrl: fallbackBackdrop,
+                  duration: videoDuration,
+                },
+              ]
+            : [],
       };
 
       const res = await fetch('/api/titles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': 'admin123', // Secure token passed by Admin
+          'x-admin-token': 'admin123',
         },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
-        throw new Error('Failed to save title. Check admin authorization.');
+        throw new Error('Failed to register video in database');
       }
 
       onSuccess();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error saving to database');
-    } finally {
-      setIsSubmitting(false);
+      setErrorMsg(err.message || 'Error saving video to database');
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-6 md:p-8 my-auto text-white font-sans">
+      <div className="relative w-full max-w-xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-6 md:p-8 text-white font-sans my-auto animate-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-gray-300 hover:text-white"
+          className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-white"
         >
           ✕
         </button>
 
-        <h2 className="text-xl font-black mb-1">Add New Title as Admin</h2>
-        <p className="text-xs text-gray-400 mb-4">
-          This writes directly to your SQLite database with <code className="text-amber-400">x-admin-token</code> verification.
+        <div className="flex items-center gap-2 mb-1">
+          <UploadCloud className="w-5 h-5 text-red-500" />
+          <h2 className="text-xl font-black">Upload Local Video (.mp4)</h2>
+        </div>
+        <p className="text-xs text-gray-400 mb-5">
+          Select a video from your computer. It will be copied into your app and added to your database automatically.
         </p>
 
         {errorMsg && (
-          <div className="mb-4 p-2.5 bg-red-950/50 border border-red-800 text-red-300 text-xs rounded-lg">
-            {errorMsg}
+          <div className="mb-4 p-3 bg-red-950/60 border border-red-800/80 rounded-xl text-xs text-red-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+        <form onSubmit={handleFinalSubmit} className="space-y-4">
+          {/* Step 1: Drop Zone / File Picker */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all ${
+              uploadedVideoUrl
+                ? 'border-emerald-500/50 bg-emerald-950/10'
+                : 'border-zinc-800 hover:border-red-500/60 bg-zinc-900/50 hover:bg-zinc-900'
+            }`}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/mkv,video/quicktime"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {isUploading ? (
+              <div className="space-y-3 py-2">
+                <RefreshCw className="w-8 h-8 text-red-500 animate-spin mx-auto" />
+                <p className="text-xs font-bold text-gray-200">Uploading {selectedFile?.name}...</p>
+                <div className="w-48 bg-zinc-800 h-1.5 rounded-full mx-auto overflow-hidden">
+                  <div className="bg-red-600 h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                </div>
+              </div>
+            ) : uploadedVideoUrl ? (
+              <div className="flex items-center justify-center gap-3 text-emerald-400 py-2">
+                <CheckCircle2 className="w-7 h-7" />
+                <div className="text-left">
+                  <p className="text-xs font-bold text-white truncate max-w-xs">{selectedFile?.name}</p>
+                  <p className="text-[11px] text-emerald-400/80">Uploaded to StreamHub • Click to change file</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 py-3">
+                <FileVideo className="w-8 h-8 text-red-500 mx-auto" />
+                <p className="text-xs font-bold text-white">Click to choose a video file (.mp4)</p>
+                <p className="text-[11px] text-gray-500">or drag and drop your movie or episode here</p>
+              </div>
+            )}
+          </div>
+
+          {/* Step 2: Choose Format (Movie vs Anime) */}
           <div>
             <label className="text-xs font-bold text-gray-300 mb-1.5 block">Format</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setType('anime')}
-                className={`py-2 px-4 rounded-xl border text-xs font-bold ${
-                  type === 'anime' ? 'bg-red-600 text-white border-red-500' : 'bg-zinc-900 text-gray-400 border-zinc-800'
+                onClick={() => setFormat('movie')}
+                className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  format === 'movie'
+                    ? 'bg-red-600 text-white border-red-500 shadow-md'
+                    : 'bg-zinc-900 text-gray-400 border-zinc-800 hover:text-white'
                 }`}
               >
-                Anime / Series Playlist
+                <Film className="w-4 h-4" />
+                Single Movie / Video
               </button>
+
               <button
                 type="button"
-                onClick={() => setType('movie')}
-                className={`py-2 px-4 rounded-xl border text-xs font-bold ${
-                  type === 'movie' ? 'bg-red-600 text-white border-red-500' : 'bg-zinc-900 text-gray-400 border-zinc-800'
+                onClick={() => setFormat('anime')}
+                className={`py-2.5 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                  format === 'anime'
+                    ? 'bg-red-600 text-white border-red-500 shadow-md'
+                    : 'bg-zinc-900 text-gray-400 border-zinc-800 hover:text-white'
                 }`}
               >
-                Single Movie
+                <Tv className="w-4 h-4" />
+                Anime Series Episode
               </button>
             </div>
           </div>
 
+          {/* Step 3: Title & Genre */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="text-xs text-gray-400 font-semibold mb-1 block">Title *</label>
+              <label className="text-xs font-semibold text-gray-400 mb-1 block">Title *</label>
               <input
                 type="text"
-                placeholder="e.g. Solo Leveling, Bleach, Dune"
+                placeholder="e.g. My Favorite Movie or Anime Name"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none focus:border-red-500"
                 required
               />
             </div>
+
             <div>
-              <label className="text-xs text-gray-400 font-semibold mb-1 block">Year</label>
-              <input
-                type="number"
-                value={releaseYear}
-                onChange={(e) => setReleaseYear(e.target.value)}
+              <label className="text-xs font-semibold text-gray-400 mb-1 block">Genre</label>
+              <select
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
-              />
+              >
+                <option value="Action">Action</option>
+                <option value="Anime">Anime</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Personal">Personal / Vlog</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+              </select>
             </div>
           </div>
 
+          {/* Episode Title if Anime */}
+          {format === 'anime' && (
+            <div>
+              <label className="text-xs font-semibold text-gray-400 mb-1 block">Episode Name</label>
+              <input
+                type="text"
+                placeholder="e.g. Episode 1: Pilot"
+                value={episodeTitle}
+                onChange={(e) => setEpisodeTitle(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
+              />
+            </div>
+          )}
+
+          {/* Synopsis */}
           <div>
-            <label className="text-xs text-gray-400 font-semibold mb-1 block">Synopsis</label>
-            <textarea
-              rows={2}
-              placeholder="Storyline synopsis..."
+            <label className="text-xs font-semibold text-gray-400 mb-1 block">Short Description (Optional)</label>
+            <input
+              type="text"
+              placeholder="A brief sentence about this video..."
               value={synopsis}
               onChange={(e) => setSynopsis(e.target.value)}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
             />
           </div>
 
-          {type === 'movie' ? (
-            <div>
-              <label className="text-xs text-gray-400 font-semibold mb-1 block">Video Stream URL (.m3u8 or .mp4)</label>
-              <input
-                type="text"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none font-mono"
-              />
-            </div>
-          ) : (
-            <div className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-300">Episodes Playlist ({episodes.length})</span>
-                <button
-                  type="button"
-                  onClick={handleAddEpisode}
-                  className="text-xs bg-red-600 text-white px-2 py-1 rounded font-bold"
-                >
-                  + Add Episode
-                </button>
-              </div>
-
-              {episodes.map((ep, idx) => (
-                <div key={idx} className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-red-400">Episode {idx + 1}</span>
-                    {episodes.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveEpisode(idx)}
-                        className="text-gray-500 hover:text-red-400"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Episode Title"
-                    value={ep.title}
-                    onChange={(e) => {
-                      const copy = [...episodes];
-                      copy[idx].title = e.target.value;
-                      setEpisodes(copy);
-                    }}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-1.5 text-xs text-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Stream URL (.m3u8 or .mp4)"
-                    value={ep.videoUrl}
-                    onChange={(e) => {
-                      const copy = [...episodes];
-                      copy[idx].videoUrl = e.target.value;
-                      setEpisodes(copy);
-                    }}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded p-1.5 text-xs text-white font-mono"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm rounded-xl transition-all shadow-xl disabled:opacity-50"
-          >
-            {isSubmitting ? 'Writing to SQLite...' : 'Save to Database (Admin)'}
-          </button>
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isUploading || !uploadedVideoUrl}
+              className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold text-sm rounded-xl transition-all shadow-xl disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              <span>Save & Publish to StreamHub</span>
+            </button>
+          </div>
         </form>
       </div>
     </div>
