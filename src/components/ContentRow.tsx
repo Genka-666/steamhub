@@ -40,26 +40,34 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
 
   return (
     <div id={id} className="relative mb-8 md:mb-12 px-4 md:px-12 group/row select-none">
-      {/* Row Header */}
-      <div className="flex items-center gap-3 mb-3">
-        <h2 className="text-lg md:text-xl font-bold text-white tracking-wide">{title}</h2>
-        {badge && (
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-red-600/20 text-red-400 border border-red-500/30">
-            {badge}
-          </span>
-        )}
+      {/* Category Row Header */}
+      <div className="flex items-center justify-between mb-3.5">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg md:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span>{title}</span>
+          </h2>
+          {badge && (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/25 backdrop-blur-sm">
+              {badge}
+            </span>
+          )}
+        </div>
+
+        <span className="text-xs text-zinc-500 font-medium group-hover/row:text-zinc-400 transition-colors">
+          {items.length} {items.length === 1 ? 'Title' : 'Titles'}
+        </span>
       </div>
 
-      {/* Horizontal Carousel */}
-      <div className="relative">
+      {/* Horizontal Carousel Container */}
+      <div className="relative group">
         {/* Left Arrow Button */}
         {showLeftArrow && (
           <button
             onClick={() => handleScroll('left')}
-            className="absolute left-0 top-0 bottom-0 z-30 w-10 bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-sm rounded-r"
-            title="Scroll left"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -ml-2 md:-ml-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-white/10 shadow-2xl hover:scale-110 active:scale-95"
+            title="Scroll Left"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <ChevronLeft className="w-5 h-5" />
           </button>
         )}
 
@@ -67,7 +75,7 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
         <div
           ref={rowRef}
           onScroll={updateArrows}
-          className="flex items-center gap-4 overflow-x-auto no-scrollbar scroll-smooth py-2 px-1"
+          className="flex items-center gap-4 md:gap-5 overflow-x-auto no-scrollbar scroll-smooth py-3 px-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {items.map((item) => (
@@ -79,14 +87,13 @@ export default function ContentRow({ id, title, items, badge, showProgress = tru
         {showRightArrow && (
           <button
             onClick={() => handleScroll('right')}
-            className="absolute right-0 top-0 bottom-0 z-30 w-10 bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-sm rounded-l"
-            title="Scroll right"
+            className="absolute right-0 top-1/2 -translate-y-1/2 -mr-2 md:-mr-4 z-30 p-2.5 rounded-full bg-zinc-950/80 hover:bg-zinc-900 text-white flex items-center justify-center transition-all opacity-0 group-hover/row:opacity-100 backdrop-blur-md border border-white/10 shadow-2xl hover:scale-110 active:scale-95"
+            title="Scroll Right"
           >
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-5 h-5" />
           </button>
         )}
       </div>
     </div>
   );
 }
-
