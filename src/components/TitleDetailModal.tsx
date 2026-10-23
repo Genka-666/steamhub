@@ -1,13 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { X, Play, Plus, Check, ChevronDown } from 'lucide-react';
+import { X, Play, Plus, Check, ChevronDown, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { useWatch } from '@/context/WatchContext';
 
 export default function TitleDetailModal() {
-  const { activeModalTitle, setActiveModalTitle, isInWatchlist, toggleWatchlist, titles } = useWatch();
+  const {
+    activeModalTitle,
+    setActiveModalTitle,
+    isInWatchlist,
+    toggleWatchlist,
+    titles,
+    selectedHeroTitle,
+    setSelectedHeroTitle,
+  } = useWatch();
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -29,6 +40,28 @@ export default function TitleDetailModal() {
 
   const inList = isInWatchlist(activeModalTitle.id);
   const currentSeasonData = activeModalTitle.seasons?.find((s) => s.seasonNumber === selectedSeason) || activeModalTitle.seasons?.[0];
+  const clipSource = activeModalTitle.clipUrl || (activeModalTitle.type === 'movie' ? activeModalTitle.videoUrl : undefined);
+
+  useEffect(() => {
+    setVideoLoaded(false);
+  }, [activeModalTitle.id, clipSource]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
+
+  const toggleSound = () => {
+    const next = !isMuted;
+    setIsMuted(next);
+    if (videoRef.current) {
+      videoRef.current.muted = next;
+      if (!next) {
+        videoRef.current.play().catch(() => {});
+      }
+    }
+  };
 
   const similarTitles = titles.filter(
     (t) => t.id !== activeModalTitle.id && t.genres.some((g) => activeModalTitle.genres.includes(g))
@@ -51,33 +84,76 @@ export default function TitleDetailModal() {
         <div className="relative aspect-[16/9] md:aspect-[21/9] w-full bg-zinc-900 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={activeModalTitle.backdropUrl}
+            src={activeModalTitle.backdropUrl || activeModalTitle.posterUrl}
             alt={activeModalTitle.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+
+          {clipSource && (
+            <video
+              ref={videoRef}
+              key={clipSource}
+              src={clipSource}
+              autoPlay
+              loop
+              muted={isMuted}
+              playsInline
+              onCanPlay={() => setVideoLoaded(true)}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+                videoLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+          )}
+
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent z-10 pointer-events-none" />
+
+          {/* Sound Toggle */}
+          {clipSource && (
+            <button
+              onClick={toggleSound}
+              className="absolute top-4 left-4 z-30 p-2 rounded-full bg-zinc-900/80 hover:bg-zinc-800 text-white border border-zinc-700 transition-all backdrop-blur"
+              title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-red-400" />}
+            </button>
+          )}
 
           {/* Quick Action Overlay */}
-          <div className="absolute bottom-6 left-6 right-6 flex items-center gap-3">
-            <Link
-              href={
-                (activeModalTitle.type === 'series' || activeModalTitle.type === 'anime') && currentSeasonData?.episodes[0]
-                  ? `/watch?titleId=${activeModalTitle.id}&episodeId=${currentSeasonData.episodes[0].id}`
-                  : `/watch?titleId=${activeModalTitle.id}`
-              }
-              onClick={() => setActiveModalTitle(null)}
-              className="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-transform hover:scale-105 shadow-xl"
-            >
-              <Play className="w-5 h-5 fill-current" />
-              {activeModalTitle.type === 'series' || activeModalTitle.type === 'anime' ? 'Play S1:E1' : 'Play Movie'}
-            </Link>
+          <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between z-20">
+            <div className="flex items-center gap-3">
+              <Link
+                href={
+                  (activeModalTitle.type === 'series' || activeModalTitle.type === 'anime') && currentSeasonData?.episodes[0]
+                    ? `/watch?titleId=${activeModalTitle.id}&episodeId=${currentSeasonData.episodes[0].id}`
+                    : `/watch?titleId=${activeModalTitle.id}`
+                }
+                onClick={() => setActiveModalTitle(null)}
+                className="bg-white hover:bg-gray-200 text-black px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-transform hover:scale-105 shadow-xl"
+              >
+                <Play className="w-5 h-5 fill-current" />
+                {activeModalTitle.type === 'series' || activeModalTitle.type === 'anime' ? 'Play S1:E1' : 'Play Movie'}
+              </Link>
+
+              <button
+                onClick={() => toggleWatchlist(activeModalTitle.id)}
+                className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 text-white border border-zinc-700 transition-colors"
+                title={inList ? 'Remove from My List' : 'Add to My List'}
+              >
+                {inList ? <Check className="w-5 h-5 text-emerald-400" /> : <Plus className="w-5 h-5" />}
+              </button>
+            </div>
 
             <button
-              onClick={() => toggleWatchlist(activeModalTitle.id)}
-              className="p-2.5 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 text-white border border-zinc-700 transition-colors"
-              title={inList ? 'Remove from My List' : 'Add to My List'}
+              onClick={() => {
+                setSelectedHeroTitle(activeModalTitle);
+                setActiveModalTitle(null);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="px-3.5 py-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 text-gray-200 hover:text-white border border-zinc-700 text-xs font-semibold flex items-center gap-1.5 transition-all backdrop-blur hover:scale-105"
+              title="Show on Main Billboard"
             >
-              {inList ? <Check className="w-5 h-5 text-emerald-400" /> : <Plus className="w-5 h-5" />}
+              <Sparkles className="w-3.5 h-3.5 text-red-400" />
+              <span>Feature on Hero</span>
             </button>
           </div>
         </div>

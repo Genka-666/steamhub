@@ -16,59 +16,72 @@ export async function POST(request: Request) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get('video') as File | null;
+    const file = (formData.get('file') || formData.get('video') || formData.get('image')) as File | null;
+    const uploadType = (formData.get('type') as string) || '';
 
     if (!file) {
-      return NextResponse.json({ error: 'No video file provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const originalName = file.name || 'video.mp4';
-    const ext = path.extname(originalName).toLowerCase() || '.mp4';
+    const originalName = file.name || 'upload.bin';
+    const ext = path.extname(originalName).toLowerCase();
     const cleanBase = path.basename(originalName, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
     const uniqueFilename = `${Date.now()}_${cleanBase}${ext}`;
-    const videoDiskPath = path.join(process.cwd(), 'public', 'uploads', 'videos', uniqueFilename);
-    const videoPublicUrl = `/uploads/videos/${uniqueFilename}`;
 
-    // 2. Convert to Buffer and write video to disk
+    const isImage = uploadType === 'image' || ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'].includes(ext);
+
+    // Write file to either posters or videos folder
+    const targetFolder = isImage ? 'posters' : 'videos';
+    const diskPath = path.join(process.cwd(), 'public', 'uploads', targetFolder, uniqueFilename);
+    const publicUrl = `/uploads/${targetFolder}/${uniqueFilename}`;
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    await writeFile(videoDiskPath, buffer);
+    await writeFile(diskPath, buffer);
 
+    // If it's an image, return URL directly
+    if (isImage) {
+      return NextResponse.json({
+        success: true,
+        type: 'image',
+        url: publicUrl,
+        originalName,
+      });
+    }
+
+    // Video processing
     let thumbnailUrl = '/uploads/thumbnails/default.jpg';
     let duration = 0;
 
-    // 3. Attempt to generate thumbnail & probe duration using local FFmpeg / FFprobe
     const thumbFilename = `${Date.now()}_${cleanBase}.jpg`;
     const thumbDiskPath = path.join(process.cwd(), 'public', 'uploads', 'thumbnails', thumbFilename);
 
     try {
-      // Extract thumbnail at second 2
-      await execAsync(`ffmpeg -y -ss 00:00:02 -i "${videoDiskPath}" -vframes 1 -q:v 2 "${thumbDiskPath}"`);
+      await execAsync(`ffmpeg -y -ss 00:00:02 -i "${diskPath}" -vframes 1 -q:v 2 "${thumbDiskPath}"`);
       thumbnailUrl = `/uploads/thumbnails/${thumbFilename}`;
     } catch {
-      // FFmpeg thumbnail fallback
       thumbnailUrl = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80';
     }
 
     try {
-      // Extract duration
       const { stdout } = await execAsync(
-        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoDiskPath}"`
+        `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${diskPath}"`
       );
       duration = Math.round(parseFloat(stdout.trim())) || 0;
     } catch {}
 
     return NextResponse.json({
       success: true,
-      videoUrl: videoPublicUrl,
+      type: 'video',
+      videoUrl: publicUrl,
+      url: publicUrl,
       thumbnailUrl,
       duration,
       originalName,
       titleSuggestion: cleanBase.replace(/_/g, ' '),
     });
   } catch (error: any) {
-    console.error('Video upload failed:', error);
-    return NextResponse.json({ error: error.message || 'Video upload failed' }, { status: 500 });
+    console.error('File upload failed:', error);
+    return NextResponse.json({ error: error.message || 'File upload failed' }, { status: 500 });
   }
 }
-

@@ -11,10 +11,10 @@ import { Search, Clapperboard, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
-  const { titles, loadingTitles, searchQuery, watchlist, watchProgress, currentProfile } = useWatch();
+  const { titles, loadingTitles, searchQuery, watchlist, watchProgress, currentProfile, selectedHeroTitle } = useWatch();
 
-  // Featured Hero title (first movie or anime in database)
-  const featuredTitle = titles[0];
+  // Featured Hero title (selected title or first movie/anime in database)
+  const featuredTitle = selectedHeroTitle || titles[0];
 
   // Continue watching items
   const continueWatchingTitles = titles.filter((t) => {

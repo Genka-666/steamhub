@@ -77,6 +77,7 @@ export async function PUT(
       posterUrl,
       backdropUrl,
       videoUrl,
+      clipUrl,
       episodes = [], // Array of { id?, title, videoUrl, duration, episodeNumber }
     } = body;
 
@@ -94,6 +95,7 @@ export async function PUT(
         posterUrl: posterUrl || undefined,
         backdropUrl: backdropUrl || undefined,
         videoUrl: videoUrl !== undefined ? videoUrl : undefined,
+        clipUrl: clipUrl !== undefined ? clipUrl : undefined,
       },
     });
 

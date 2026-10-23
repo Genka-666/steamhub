@@ -24,6 +24,9 @@ import {
   AlertCircle,
   Edit3,
   Plus,
+  Image as ImageIcon,
+  Sparkles,
+  Video,
 } from 'lucide-react';
 import { useWatch } from '@/context/WatchContext';
 import { Title, Episode } from '@/types';
@@ -363,6 +366,11 @@ export default function AdminPage() {
                                     Local File
                                   </span>
                                 )}
+                                {t.clipUrl && (
+                                  <span className="text-[9px] bg-red-500/10 text-red-400 border border-red-500/30 px-1.5 py-0.2 rounded font-semibold flex items-center gap-1" title="Short background clip attached">
+                                    <Sparkles className="w-2.5 h-2.5" /> Clip
+                                  </span>
+                                )}
                               </div>
                               <p className="text-[11px] text-gray-500 line-clamp-1">{t.synopsis}</p>
                             </div>
@@ -642,7 +650,10 @@ function EditSeriesModal({
   const [rating, setRating] = useState(titleData.rating || '16+');
   const [posterUrl, setPosterUrl] = useState(titleData.posterUrl || '');
   const [backdropUrl, setBackdropUrl] = useState(titleData.backdropUrl || '');
+  const [clipUrl, setClipUrl] = useState(titleData.clipUrl || '');
   const [movieVideoUrl, setMovieVideoUrl] = useState(titleData.videoUrl || '');
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
+  const [isUploadingClip, setIsUploadingClip] = useState(false);
 
   // Flatten all existing episodes
   const initialEpisodes: EditableEpisode[] = (
@@ -717,6 +728,55 @@ function EditSeriesModal({
     setEpisodes((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleUploadPoster = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPoster(true);
+    setErrorMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'image');
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-admin-token': 'admin123' },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to upload poster image');
+      const data = await res.json();
+      setPosterUrl(data.url);
+      setBackdropUrl(data.url);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error uploading poster');
+    } finally {
+      setIsUploadingPoster(false);
+    }
+  };
+
+  const handleUploadClip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingClip(true);
+    setErrorMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'video');
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-admin-token': 'admin123' },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Failed to upload background clip');
+      const data = await res.json();
+      setClipUrl(data.videoUrl || data.url);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error uploading clip');
+    } finally {
+      setIsUploadingClip(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -735,7 +795,8 @@ function EditSeriesModal({
         releaseYear: Number(releaseYear),
         rating,
         posterUrl,
-        backdropUrl,
+        backdropUrl: backdropUrl || posterUrl,
+        clipUrl: clipUrl || null,
         videoUrl: type === 'movie' ? movieVideoUrl : undefined,
         episodes: (type === 'anime' || type === 'series') ? episodes : [],
       };
@@ -826,13 +887,111 @@ function EditSeriesModal({
             </div>
           </div>
 
-          {/* Section 2: Episode Playlist Management */}
+          {/* Section 2: Custom Poster Artwork & Background Video Clip */}
+          <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              2. Custom Artwork & Short Video Clip
+            </h3>
+
+            {/* Poster / Backdrop */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-gray-300 font-semibold flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+                  Custom Poster Artwork
+                </span>
+                {isUploadingPoster && (
+                  <span className="text-[11px] text-blue-400 flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading image...
+                  </span>
+                )}
+              </label>
+
+              <div className="flex items-center gap-2">
+                {posterUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={posterUrl}
+                    alt="Poster Preview"
+                    className="w-10 h-10 object-cover rounded border border-zinc-700 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-gray-600">
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="Poster Image URL (/uploads/posters/... or https://...)"
+                  value={posterUrl}
+                  onChange={(e) => {
+                    setPosterUrl(e.target.value);
+                    setBackdropUrl(e.target.value);
+                  }}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                />
+
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local image from computer">
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Upload Poster</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadPoster}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Short Background Video Clip */}
+            <div className="space-y-1.5 pt-1">
+              <label className="text-xs text-gray-300 font-semibold flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  Short Background Video Clip (.mp4)
+                </span>
+                {isUploadingClip && (
+                  <span className="text-[11px] text-amber-400 flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading clip...
+                  </span>
+                )}
+              </label>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Short clip URL (/uploads/videos/... or https://...)"
+                  value={clipUrl}
+                  onChange={(e) => setClipUrl(e.target.value)}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                />
+
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local short clip from computer">
+                  <Video className="w-4 h-4" />
+                  <span>Upload Clip</span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={handleUploadClip}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <p className="text-[10px] text-gray-500">
+                Auto-plays silently on the background display when this movie or anime is selected.
+              </p>
+            </div>
+          </div>
+
+          {/* Section 3: Episode Playlist Management */}
           {(type === 'anime' || type === 'series') ? (
             <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                    2. Episodes Playlist ({episodes.length})
+                    3. Episodes Playlist ({episodes.length})
                   </h3>
                   <p className="text-[11px] text-gray-500">Add Episode 2, Episode 3, or edit existing files.</p>
                 </div>
@@ -971,6 +1130,12 @@ function SimpleVideoUploadModal({
   const [uploadedThumbUrl, setUploadedThumbUrl] = useState('');
   const [videoDuration, setVideoDuration] = useState(0);
 
+  // Custom poster & short background clip state
+  const [customPosterUrl, setCustomPosterUrl] = useState('');
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
+  const [customClipUrl, setCustomClipUrl] = useState('');
+  const [isUploadingClip, setIsUploadingClip] = useState(false);
+
   // Content form
   const [format, setFormat] = useState<'movie' | 'anime'>('anime');
   const [title, setTitle] = useState('');
@@ -1030,6 +1195,54 @@ function SimpleVideoUploadModal({
     }
   };
 
+  const handleUploadPoster = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingPoster(true);
+    setErrorMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'image');
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-admin-token': 'admin123' },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Poster upload failed');
+      const data = await res.json();
+      setCustomPosterUrl(data.url);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error uploading poster image');
+    } finally {
+      setIsUploadingPoster(false);
+    }
+  };
+
+  const handleUploadClip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingClip(true);
+    setErrorMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', 'video');
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'x-admin-token': 'admin123' },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Clip upload failed');
+      const data = await res.json();
+      setCustomClipUrl(data.videoUrl || data.url);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error uploading background clip');
+    } finally {
+      setIsUploadingClip(false);
+    }
+  };
+
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -1045,6 +1258,7 @@ function SimpleVideoUploadModal({
 
     try {
       const fallbackBackdrop =
+        customPosterUrl ||
         uploadedThumbUrl ||
         'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80';
 
@@ -1055,6 +1269,7 @@ function SimpleVideoUploadModal({
         genres: [genre],
         posterUrl: fallbackBackdrop,
         backdropUrl: fallbackBackdrop,
+        clipUrl: customClipUrl || undefined,
         videoUrl: format === 'movie' ? uploadedVideoUrl : undefined,
         episodes:
           format === 'anime'
@@ -1238,6 +1453,105 @@ function SimpleVideoUploadModal({
               onChange={(e) => setSynopsis(e.target.value)}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2.5 text-xs text-white outline-none"
             />
+          </div>
+
+          {/* Custom Artwork & Short Background Clip Section */}
+          <div className="p-3.5 bg-zinc-900/60 border border-zinc-800/90 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                Custom Poster Artwork & Short Background Clip
+              </span>
+              <span className="text-[10px] text-gray-500 font-medium">Optional Enhancements</span>
+            </div>
+
+            {/* Custom Poster Artwork */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-gray-300 font-semibold flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-blue-400" />
+                  Custom Poster Artwork
+                </label>
+                {isUploadingPoster && (
+                  <span className="text-[11px] text-blue-400 flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading image...
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {customPosterUrl || uploadedThumbUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={customPosterUrl || uploadedThumbUrl}
+                    alt="Poster Preview"
+                    className="w-10 h-10 object-cover rounded border border-zinc-700 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded flex items-center justify-center flex-shrink-0 text-gray-600">
+                    <ImageIcon className="w-4 h-4" />
+                  </div>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="Image URL or upload from your device"
+                  value={customPosterUrl}
+                  onChange={(e) => setCustomPosterUrl(e.target.value)}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                />
+
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload local poster image">
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Upload Poster</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUploadPoster}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {/* Short Background Video Clip */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-gray-300 font-semibold flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5 text-red-400" />
+                  Short Background Video Clip / Trailer (.mp4)
+                </label>
+                {isUploadingClip && (
+                  <span className="text-[11px] text-red-400 flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3 h-3 animate-spin" /> Uploading clip...
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Video clip URL or upload short .mp4"
+                  value={customClipUrl}
+                  onChange={(e) => setCustomClipUrl(e.target.value)}
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-xs text-white outline-none font-mono"
+                />
+
+                <label className="p-2 bg-zinc-800 hover:bg-zinc-700 text-gray-300 hover:text-white rounded-lg cursor-pointer border border-zinc-700 flex items-center gap-1.5 text-xs font-medium flex-shrink-0" title="Upload short video clip (.mp4)">
+                  <Video className="w-4 h-4" />
+                  <span>Upload Clip</span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={handleUploadClip}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              <p className="text-[10px] text-gray-400">
+                ✨ When viewers select this movie or anime, this short clip will automatically play on the background display!
+              </p>
+            </div>
           </div>
 
           <div className="pt-2">

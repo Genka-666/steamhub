@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Play, Plus, Check, Info } from 'lucide-react';
+import { Play, Plus, Check, Info, Sparkles } from 'lucide-react';
 import { Title } from '@/types';
 import { useWatch } from '@/context/WatchContext';
 
@@ -12,16 +12,27 @@ interface ContentCardProps {
 }
 
 export default function ContentCard({ title, showProgress = true }: ContentCardProps) {
-  const { setActiveModalTitle, isInWatchlist, toggleWatchlist, getProgress } = useWatch();
+  const { setActiveModalTitle, isInWatchlist, toggleWatchlist, getProgress, setSelectedHeroTitle } = useWatch();
 
   const inList = isInWatchlist(title.id);
   const progress = getProgress(title.id);
+
+  const handleSelectTitle = () => {
+    setSelectedHeroTitle(title);
+    setActiveModalTitle(title);
+  };
+
+  const handleSetHeroOnly = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedHeroTitle(title);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="relative group/card flex-shrink-0 w-44 md:w-60 cursor-pointer transition-all duration-300 hover:scale-105 hover:z-30">
       {/* Thumbnail Container */}
       <div
-        onClick={() => setActiveModalTitle(title)}
+        onClick={handleSelectTitle}
         className="relative aspect-[16/9] md:aspect-[16/10] w-full rounded-md overflow-hidden bg-zinc-900 border border-zinc-800 shadow-md group-hover/card:border-zinc-600 transition-colors"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -40,6 +51,14 @@ export default function ContentCard({ title, showProgress = true }: ContentCardP
           {title.type}
         </span>
 
+        {/* Short Clip indicator badge if present */}
+        {title.clipUrl && (
+          <span className="absolute top-2 right-2 text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-red-600/90 text-white backdrop-blur flex items-center gap-1 shadow">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+            CLIP
+          </span>
+        )}
+
         {/* Watch Progress Bar */}
         {showProgress && progress && progress.percentage > 0 && (
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-800">
@@ -55,7 +74,7 @@ export default function ContentCard({ title, showProgress = true }: ContentCardP
       <div className="mt-2 flex items-center justify-between">
         <div className="overflow-hidden">
           <h3
-            onClick={() => setActiveModalTitle(title)}
+            onClick={handleSelectTitle}
             className="text-xs md:text-sm font-semibold text-gray-200 truncate group-hover/card:text-white"
           >
             {title.title}
@@ -79,6 +98,14 @@ export default function ContentCard({ title, showProgress = true }: ContentCardP
           </Link>
 
           <button
+            onClick={handleSetHeroOnly}
+            className="p-1.5 bg-zinc-800 text-gray-200 hover:text-red-400 rounded-full hover:bg-zinc-700 transition-colors border border-zinc-700"
+            title="Play short clip on top background billboard"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+          </button>
+
+          <button
             onClick={(e) => {
               e.stopPropagation();
               toggleWatchlist(title.id);
@@ -92,7 +119,7 @@ export default function ContentCard({ title, showProgress = true }: ContentCardP
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setActiveModalTitle(title);
+              handleSelectTitle();
             }}
             className="p-1.5 bg-zinc-800 text-white rounded-full hover:bg-zinc-700 transition-colors border border-zinc-700"
             title="More Info"

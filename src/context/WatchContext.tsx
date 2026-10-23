@@ -20,6 +20,8 @@ interface WatchContextType {
   getProgress: (titleId: string, episodeId?: string) => WatchProgress | undefined;
   activeModalTitle: Title | null;
   setActiveModalTitle: (title: Title | null) => void;
+  selectedHeroTitle: Title | null;
+  setSelectedHeroTitle: (title: Title | null) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   showAddModal: boolean;
@@ -35,6 +37,7 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
   const [watchlist, setWatchlist] = useState<string[]>([]);
   const [watchProgress, setWatchProgress] = useState<Record<string, WatchProgress>>({});
   const [activeModalTitle, setActiveModalTitle] = useState<Title | null>(null);
+  const [selectedHeroTitle, setSelectedHeroTitle] = useState<Title | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
 
@@ -46,6 +49,14 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setTitles(data);
+        setSelectedHeroTitle((prev) => {
+          if (!prev && data.length > 0) return data[0];
+          if (prev) {
+            const found = data.find((t: Title) => t.id === prev.id);
+            return found || (data.length > 0 ? data[0] : null);
+          }
+          return null;
+        });
       }
     } catch (err) {
       console.error('Failed to load titles from backend:', err);
@@ -66,6 +77,9 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
         setTitles((prev) => prev.filter((t) => t.id !== id));
         if (activeModalTitle?.id === id) {
           setActiveModalTitle(null);
+        }
+        if (selectedHeroTitle?.id === id) {
+          setSelectedHeroTitle(null);
         }
         return true;
       }
@@ -196,6 +210,8 @@ export function WatchProvider({ children }: { children: React.ReactNode }) {
         getProgress,
         activeModalTitle,
         setActiveModalTitle,
+        selectedHeroTitle,
+        setSelectedHeroTitle,
         searchQuery,
         setSearchQuery,
         showAddModal,

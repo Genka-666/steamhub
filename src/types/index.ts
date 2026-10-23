@@ -36,8 +36,9 @@ export interface Title {
   director: string;
   posterUrl: string;
   backdropUrl: string;
-  trailerVideoUrl: string; // .m3u8 or mp4
-  videoUrl?: string; // For movie .m3u8
+  trailerVideoUrl?: string; // .m3u8 or mp4
+  clipUrl?: string; // Short background video preview / trailer clip
+  videoUrl?: string; // For movie .m3u8 or mp4
   introStart?: number;
   introEnd?: number;
   seasons?: Season[];
