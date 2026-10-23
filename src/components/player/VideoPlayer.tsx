@@ -22,6 +22,18 @@ import {
 import { useWatch } from '@/context/WatchContext';
 import { VideoQualityLevel } from '@/types';
 
+// Suppress harmless browser media AbortErrors in React/Next.js
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (
+      event.reason?.name === 'AbortError' ||
+      event.reason?.message?.includes('aborted by the user agent')
+    ) {
+      event.preventDefault();
+    }
+  });
+}
+
 interface VideoPlayerProps {
   src: string;
   title: string;
@@ -92,11 +104,38 @@ export default function VideoPlayer({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Safe play helper to prevent unhandled AbortErrors
+  const safePlay = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    try {
+      await video.play();
+      setIsPlaying(true);
+      setIsBuffering(false);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        // Normal when switching media or paused by user
+        return;
+      }
+      if (err.name === 'NotAllowedError') {
+        // Autoplay blocked by browser policy: show Big Play Button
+        setIsPlaying(false);
+        setIsBuffering(false);
+        return;
+      }
+      console.warn('Video play prevented:', err);
+      setIsPlaying(false);
+      setIsBuffering(false);
+    }
+  }, []);
+
   // 1. Initialize HLS or Native MP4 Video Stream
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
 
+    let isMounted = true;
     let hls: Hls | null = null;
     setIsBuffering(true);
     setHasError(false);
@@ -122,6 +161,7 @@ export default function VideoPlayer({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        if (!isMounted) return;
         setIsBuffering(false);
         const levels: VideoQualityLevel[] = data.levels.map((lvl, idx) => ({
           height: lvl.height,
@@ -135,14 +175,11 @@ export default function VideoPlayer({
           video.currentTime = initialSeek;
         }
 
-        // Try autoplay; if blocked by browser policy, gracefully stop buffering
-        video.play().catch(() => {
-          setIsPlaying(false);
-          setIsBuffering(false);
-        });
+        safePlay();
       });
 
       hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        if (!isMounted) return;
         const lvl = hls?.levels[data.level];
         if (lvl) {
           setActiveQualityLabel(hls?.autoLevelEnabled ? `Auto (${lvl.height}p)` : `${lvl.height}p`);
@@ -150,6 +187,7 @@ export default function VideoPlayer({
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!isMounted) return;
         if (data.fatal) {
           setIsBuffering(false);
           switch (data.type) {
@@ -170,42 +208,58 @@ export default function VideoPlayer({
     } else {
       // Direct Local / Remote MP4 Video Playback
       video.src = src;
-      video.load(); // Force load
-      setActiveQualityLabel('1080p MP4');
-      setQualityLevels([{ height: 1080, bitrate: 4500000, index: 0, label: 'Direct MP4' }]);
+      setActiveQualityLabel('Direct MP4');
+      setQualityLevels([{ height: 1080, bitrate: 4500000, index: 0, label: 'Original Quality' }]);
 
-      const handleLoadedMetadata = () => {
+      const handleCanPlay = () => {
+        if (!isMounted) return;
         setIsBuffering(false);
-        if (initialSeek > 0) {
-          video.currentTime = initialSeek;
+        if (initialSeek > 0 && Math.abs(video.currentTime - initialSeek) > 2) {
+          try {
+            video.currentTime = initialSeek;
+          } catch {}
         }
-        video.play().catch(() => {
-          // Autoplay blocked by browser: graceful fallback to show Big Play Button
-          setIsPlaying(false);
-          setIsBuffering(false);
-        });
+        safePlay();
       };
 
-      video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
-      video.addEventListener('canplay', () => setIsBuffering(false), { once: true });
+      video.addEventListener('canplay', handleCanPlay, { once: true });
+      video.addEventListener('loadeddata', () => {
+        if (isMounted) setIsBuffering(false);
+      }, { once: true });
 
-      // Fallback timer: if browser doesn't fire loadedmetadata within 1.5s, clear spinner
-      const timeout = setTimeout(() => {
-        setIsBuffering(false);
-      }, 1500);
+      // Explicitly load the media source
+      try {
+        video.load();
+      } catch {}
+
+      // Fallback timer: if browser doesn't fire canplay within 1s, remove spinner
+      const timer = setTimeout(() => {
+        if (isMounted) setIsBuffering(false);
+      }, 1200);
 
       return () => {
-        clearTimeout(timeout);
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        isMounted = false;
+        clearTimeout(timer);
+        video.removeEventListener('canplay', handleCanPlay);
+        if (hls) {
+          hls.destroy();
+        }
+        try {
+          video.pause();
+        } catch {}
       };
     }
 
     return () => {
+      isMounted = false;
       if (hls) {
         hls.destroy();
       }
+      try {
+        video.pause();
+      } catch {}
     };
-  }, [src, titleId, episodeId]);
+  }, [src, titleId, episodeId, safePlay, getProgress]);
 
   // 2. Heartbeat progress updater
   useEffect(() => {
@@ -264,10 +318,9 @@ export default function VideoPlayer({
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
+      setIsPlaying(false);
     } else {
-      videoRef.current.play().catch((err) => {
-        console.error('Play request failed:', err);
-      });
+      safePlay();
     }
   };
 
@@ -407,22 +460,26 @@ export default function VideoPlayer({
         }}
         onPause={() => setIsPlaying(false)}
         onWaiting={() => setIsBuffering(true)}
-        onPlaying={() => setIsBuffering(false)}
+        onPlaying={() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+        }}
         onCanPlay={() => setIsBuffering(false)}
         onLoadedData={() => setIsBuffering(false)}
         onError={(e) => {
           const v = e.currentTarget as HTMLVideoElement;
           const err = v.error;
+          // Ignore Code 1 (MEDIA_ERR_ABORTED) which occurs on navigation/remount
+          if (!err || err.code === 1) return;
+
           setIsBuffering(false);
           setHasError(true);
           const codeNames: Record<number, string> = {
-            1: 'MEDIA_ERR_ABORTED (Playback aborted)',
-            2: 'MEDIA_ERR_NETWORK (Network error loading video file)',
-            3: 'MEDIA_ERR_DECODE (Decoder error - file cannot be decoded)',
-            4: 'MEDIA_ERR_SRC_NOT_SUPPORTED (Browser lacks codec to play this video)',
+            2: 'Network error loading video file.',
+            3: 'Decoding error: browser was unable to decode this file.',
+            4: 'Codec not supported by your browser.',
           };
-          const detail = err ? codeNames[err.code] || `Code ${err.code}: ${err.message}` : 'Browser failed to load media';
-          setErrorMessage(detail);
+          setErrorMessage(codeNames[err.code] || `Error Code ${err.code}: ${err.message}`);
         }}
         onTimeUpdate={handleTimeUpdate}
         preload="auto"
