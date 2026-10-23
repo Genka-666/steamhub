@@ -1,0 +1,79 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Title {
+  id              String          @id @default(uuid())
+  slug            String          @unique
+  title           String
+  type            String          // 'movie' | 'series' | 'anime'
+  synopsis        String
+  releaseYear     Int             @default(2024)
+  rating          String          @default("16+")
+  qualityBadge    String          @default("4K Ultra HD")
+  audioBadge      String          @default("5.1 Surround")
+  matchScore      Int             @default(98)
+  duration        String?         // e.g. "2h 15m" (for movies)
+  genres          String          @default("[]") // JSON string array e.g. ["Action", "Sci-Fi"]
+  cast            String          @default("[]") // JSON string array
+  director        String          @default("Director")
+  posterUrl       String
+  backdropUrl     String
+  videoUrl        String?         // .m3u8 or .mp4 for movies
+  introStart      Int             @default(0)
+  introEnd        Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  seasons         Season[]
+  episodes        Episode[]
+  progress        WatchProgress[]
+}
+
+model Season {
+  id           String    @id @default(uuid())
+  seasonNumber Int       @default(1)
+  title        String    // e.g. "Season 1: Blood Moon"
+  titleId      String
+  parentTitle  Title     @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  episodes     Episode[]
+}
+
+model Episode {
+  id            String   @id @default(uuid())
+  titleId       String
+  seasonId      String?
+  seasonNumber  Int      @default(1)
+  episodeNumber Int      @default(1)
+  title         String   // e.g. "Episode 1: The Awakening"
+  synopsis      String?
+  duration      Int      @default(1200) // seconds
+  thumbnailUrl  String
+  videoUrl      String   // .m3u8 or .mp4
+  introStart    Int      @default(0)
+  introEnd      Int      @default(0)
+
+  parentTitle   Title    @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  parentSeason  Season?  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+}
+
+model WatchProgress {
+  id                  String   @id @default(uuid())
+  profileId           String   @default("user-1")
+  titleId             String
+  episodeId           String?
+  currentTime         Float    @default(0)
+  duration            Float    @default(0)
+  percentage          Int      @default(0)
+  lastWatchedAt       DateTime @default(now())
+
+  parentTitle         Title    @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, titleId, episodeId])
+}
